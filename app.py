@@ -1,123 +1,91 @@
-from flask import Blueprint, render_template, session, redirect, url_for, flash
-from functools import wraps
-from login import get_db_connection
+import os
+from flask import Flask, render_template
 
-patient_bp = Blueprint('patient_bp', __name__, url_prefix='/patient')
+# ================= BLUEPRINT IMPORTS =================
+from post_symptom_data import post_symptom_blueprint
+from consult_doctor import consult_blueprint
+from view_doctors import view_doctors_blueprint
+from chat_patient import chat_blueprint
+from send_message import send_msg_blueprint
+from fetch_messages import fetch_msg_blueprint
+from edit_message import update_msg_blueprint
+from send_doctor_reply import send_doctor_reply_blueprint
+from send_reply import send_reply_blueprint
 
-# ==============================================================================
-# PATIENT AUTH DECORATOR
-# ==============================================================================
-def patient_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            flash('Please log in first.', 'error')
-            return redirect(url_for('login_bp.login_page'))
+from admin_dashboard import admin_bp
+from reject_doctor import reject_doctor_blueprint
+from patient_dashboard import patient_bp
+from doctor_dashboard import doctor_bp
 
-        conn = None
-        try:
-            conn = get_db_connection()
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT user_type FROM users WHERE id=%s", (session['user_id'],))
-                user = cursor.fetchone()
+from get_user_profile import user_profile_blueprint
+from get_doctor_profile import doc_profile_fetch_blueprint
+from doctor_profile_setup import doc_profile_setup_blueprint
+from save_doctor_profile import save_doctor_profile_blueprint
 
-                if not user or user[0] != 'client':
-                    flash('Access denied.', 'error')
-                    return redirect(url_for('login_bp.login_page'))
+from send_otp import send_otp_blueprint
+from verify_otp import verify_otp_blueprint
 
-        finally:
-            if conn:
-                conn.close()
+from login import login_bp
 
-        return f(*args, **kwargs)
+# ================= APP INIT =================
+app = Flask(__name__)
 
-    return decorated_function
+# 🔥 REQUIRED FOR RAILWAY SESSION STABILITY
+app.secret_key = os.environ.get(
+    "FLASK_SECRET_KEY",
+    "mothercare-production-secure-key-9988"
+)
 
+# 🔥 SESSION FIX (THIS IS WHAT YOU WERE MISSING)
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_SECURE"] = True
+app.config["SESSION_COOKIE_HTTPONLY"] = True
 
-# ==============================================================================
-# PATIENT DASHBOARD (FIXED)
-# ==============================================================================
-@patient_bp.route('/dashboard')
-@patient_required
-def patient_dashboard():
-    conn = None
+# ================= BLUEPRINT REGISTRATION =================
+app.register_blueprint(post_symptom_blueprint)
+app.register_blueprint(consult_blueprint)
+app.register_blueprint(view_doctors_blueprint)
+app.register_blueprint(chat_blueprint)
+app.register_blueprint(send_msg_blueprint)
+app.register_blueprint(fetch_msg_blueprint)
+app.register_blueprint(update_msg_blueprint)
+app.register_blueprint(send_doctor_reply_blueprint)
+app.register_blueprint(send_reply_blueprint)
 
+app.register_blueprint(admin_bp)
+app.register_blueprint(reject_doctor_blueprint)
+app.register_blueprint(patient_bp)
+app.register_blueprint(doctor_bp)
+
+app.register_blueprint(user_profile_blueprint)
+app.register_blueprint(doc_profile_fetch_blueprint)
+app.register_blueprint(doc_profile_setup_blueprint)
+app.register_blueprint(save_doctor_profile_blueprint)
+
+app.register_blueprint(send_otp_blueprint)
+app.register_blueprint(verify_otp_blueprint)
+
+app.register_blueprint(login_bp)
+
+# ================= ROUTES =================
+@app.route('/')
+def index():
+    return render_template('screen1.html')
+
+@app.route('/test-db')
+def test_db():
     try:
+        from login import get_db_connection
         conn = get_db_connection()
-
-        with conn.cursor() as cursor:
-
-            # ================= PROFILE =================
-            cursor.execute("""
-                SELECT age, last_period, expected_delivery
-                FROM user_profiles
-                WHERE user_id=%s
-            """, (session['user_id'],))
-            profile = cursor.fetchone()
-
-            if profile is None:
-                profile = {}
-
-            # ================= SYMPTOMS =================
-            cursor.execute("""
-                SELECT *
-                FROM symptom_logs
-                WHERE user_id=%s
-                ORDER BY created_at DESC
-                LIMIT 20
-            """, (session['user_id'],))
-            symptoms = cursor.fetchall()
-
-            if symptoms is None:
-                symptoms = []
-
-            # ================= FIXED: PRE-ECLAMPSIA DATA =================
-            cursor.execute("""
-                SELECT *
-                FROM pre_eclampsia_assesment
-                WHERE user_id=%s
-                ORDER BY created_at DESC
-                LIMIT 20
-            """, (session['user_id'],))
-            assessments = cursor.fetchall()
-
-            if assessments is None:
-                assessments = []
-
-            # ================= RENDER =================
-            try:
-                return render_template(
-                    'patient_dashboard.html',
-                    profile=profile,
-                    symptoms=symptoms,
-                    assessments=assessments,
-                    user=session
-                )
-
-            except Exception as template_error:
-                return f"""
-                <h1>Patient Dashboard</h1>
-                <p><b>Template Error:</b> {template_error}</p>
-
-                <h3>Profile</h3>
-                <pre>{profile}</pre>
-
-                <h3>Assessments</h3>
-                <pre>{assessments}</pre>
-
-                <h3>Symptoms</h3>
-                <pre>{symptoms}</pre>
-
-                <a href="/logout">Logout</a>
-                """
-
+        cursor = conn.cursor()
+        cursor.execute("SELECT DATABASE()")
+        db = cursor.fetchone()
+        conn.close()
+        return f"DB OK: {db}"
     except Exception as e:
-        return f"""
-        <h1>Patient Dashboard Error</h1>
-        <p>{str(e)}</p>
-        <a href="/logout">Logout</a>
-        """, 500
+        return f"DB ERROR: {str(e)}"
 
-    finally:
-        if conn:
-            conn.close()
+# ================= RUN =================
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=True)
