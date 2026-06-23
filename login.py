@@ -1,16 +1,10 @@
 import re
-import os
 import pymysql
-from flask import Blueprint, request, jsonify, session, redirect, url_for, render_template
+from flask import Blueprint, request, jsonify, session, render_template, url_for
 
-# ==============================================================================
-# BLUEPRINT INITIALIZATION
-# ==============================================================================
 login_bp = Blueprint('login_bp', __name__)
 
-# ==============================================================================
-# DATABASE CONFIGURATION - HARDCODED FOR RAILWAY
-# ==============================================================================
+# ================= DB =================
 db_host = "reseau.proxy.rlwy.net"
 db_port = 15442
 db_user = "root"
@@ -18,276 +12,87 @@ db_password = "LMaZTqGYVPifqVIdnxJaOZWGXytgIRyC"
 db_name = "mothercare"
 
 def get_db_connection():
-    """Create and return a database connection using hardcoded Railway credentials"""
-    try:
-        print(f"Connecting to: {db_host}:{db_port}/{db_name} as {db_user}")
-        connection = pymysql.connect(
-            host=db_host,
-            port=db_port,
-            user=db_user,
-            password=db_password,
-            database=db_name,
-            cursorclass=pymysql.cursors.DictCursor,
-            connect_timeout=30,
-            autocommit=True
-        )
-        print("Connection successful!")
-        return connection
-    except Exception as e:
-        print(f"Database connection error: {str(e)}")
-        raise
+    return pymysql.connect(
+        host=db_host,
+        port=db_port,
+        user=db_user,
+        password=db_password,
+        database=db_name,
+        cursorclass=pymysql.cursors.DictCursor,
+        autocommit=True
+    )
 
-def normalize_phone(phone, country_code):
-    """Normalize phone number with the selected country code."""
-    if not phone:
-        return phone
-    phone = re.sub(r'[\s\-\(\)\.]', '', phone.strip())
-    if phone.startswith('0'):
-        phone = country_code + phone[1:]
-    if not phone.startswith('+'):
-        if phone.isdigit() and len(phone) >= 7:
-            phone = country_code + phone
-    return phone
-
-def verify_password(stored_password, plain_password):
-    """
-    Verify password against stored password.
-    Supports plain text and bcrypt hashes.
-    """
-    if not stored_password or not plain_password:
-        return False
-    
-    # 1. Check if it's plain text (direct comparison)
-    if stored_password == plain_password:
+# ================= PASSWORD =================
+def verify_password(stored, plain):
+    if stored == plain:
         return True
-    
-    # 2. Check if it's a bcrypt hash ($2y$ or $2b$)
-    if stored_password.startswith('$2y$') or stored_password.startswith('$2b$'):
-        try:
-            import bcrypt
-            return bcrypt.checkpw(plain_password.encode('utf-8'), stored_password.encode('utf-8'))
-        except:
-            return False
-    
-    # 3. Check if it's a werkzeug hash
-    try:
-        from werkzeug.security import check_password_hash
-        if check_password_hash(stored_password, plain_password):
-            return True
-    except:
-        pass
-    
     return False
 
-# ==============================================================================
-# LOGIN ROUTE
-# ==============================================================================
+# ================= LOGIN =================
 @login_bp.route('/login', methods=['POST'])
 def login():
-    """Handle user login with phone OR email - both work!"""
-    conn = None
-    try:
-        conn = get_db_connection()
-    except Exception as e:
-        return jsonify({
-            "success": False, 
-            "message": f"Database connection failed: {str(e)}"
-        })
+    conn = get_db_connection()
+    cursor = conn.cursor()
 
-    try:
-        # Get form data
-        login_input = request.form.get('login_input', '').strip()
-        password = request.form.get('password', '')
-        country_code = request.form.get('country_code', '+256')
+    login_input = request.form.get("login_input")
+    password = request.form.get("password")
+    country_code = request.form.get("country_code", "+256")
 
-        # Validate input
-        if not login_input or not password:
-            return jsonify({
-                "success": False, 
-                "message": "Please fill in all fields."
-            })
+    if not login_input or not password:
+        return jsonify({"success": False, "message": "Missing fields"})
 
-        # Check if input is email or phone
-        is_email = bool(re.match(r"^[^@]+@[^@]+\.[^@]+$", login_input))
+    is_email = "@" in login_input
 
-        with conn.cursor() as cursor:
-            if is_email:
-                # Email login
-                sql = """
-                    SELECT id, firstname, lastname, email, phone, password, 
-                           user_type, approved, status 
-                    FROM users 
-                    WHERE email = %s
-                """
-                cursor.execute(sql, (login_input,))
-            else:
-                # Phone login
-                normalized_phone = normalize_phone(login_input, country_code)
-                digits_only = re.sub(r'[^0-9]', '', normalized_phone)
-                phone_pattern = f"%{digits_only[-7:]}%" if len(digits_only) >= 7 else f"%{digits_only}%"
-                
-                sql = """
-                    SELECT id, firstname, lastname, email, phone, password, 
-                           user_type, approved, status 
-                    FROM users 
-                    WHERE phone = %s OR phone LIKE %s
-                """
-                cursor.execute(sql, (normalized_phone, phone_pattern))
-            
-            row = cursor.fetchone()
+    if is_email:
+        cursor.execute("SELECT * FROM users WHERE email=%s", (login_input,))
+    else:
+        phone = re.sub(r"\D", "", login_input)
+        cursor.execute("SELECT * FROM users WHERE phone LIKE %s", (f"%{phone[-7:]}",))
 
-            # Check if user exists
-            if not row:
-                return jsonify({
-                    "success": False, 
-                    "message": "Account not found. Please check your phone number or email."
-                })
+    user = cursor.fetchone()
 
-            # Check if user status is active
-            if row.get('status') != 'active':
-                return jsonify({
-                    "success": False, 
-                    "message": "Your account is inactive. Please contact support."
-                })
+    if not user:
+        return jsonify({"success": False, "message": "User not found"})
 
-            # Verify password
-            stored_password = row.get('password', '')
-            
-            if not verify_password(stored_password, password):
-                return jsonify({
-                    "success": False, 
-                    "message": "Invalid password. Please try again."
-                })
+    if user["status"] != "active":
+        return jsonify({"success": False, "message": "Account inactive"})
 
-            # Set up session
-            session['user_id'] = row['id']
-            session['firstname'] = row['firstname']
-            session['lastname'] = row['lastname']
-            session['email'] = row['email']
-            session['phone'] = row['phone']
-            session['user_type'] = row['user_type']
-            session['logged_in'] = True
+    if not verify_password(user["password"], password):
+        return jsonify({"success": False, "message": "Wrong password"})
 
-            # ==============================================================
-            # ✅ ROLE-BASED REDIRECTION - FIXED BLUEPRINT NAMES
-            # ==============================================================
-            user_type = row['user_type']
-            redirect_page = ""
-            message_suffix = ""
+    # ================= SESSION =================
+    session.clear()
+    session["user_id"] = user["id"]
+    session["firstname"] = user["firstname"]
+    session["user_type"] = user["user_type"]
 
-            if user_type == "admin":
-                # Redirect to admin dashboard
-                redirect_page = url_for('admin.admin_dashboard')
-                message_suffix = "Welcome Admin!"
-                
-            elif user_type == "doctor":
-                # Check if doctor is approved
-                if row.get('approved') == 0:
-                    return jsonify({
-                        "success": False, 
-                        "message": "Your account is pending admin approval."
-                    })
-                
-                # Check if doctor has complete profile
-                try:
-                    sql_doctor = """
-                        SELECT id, specialty, facility, dcontact 
-                        FROM doctors 
-                        WHERE user_id = %s
-                    """
-                    cursor.execute(sql_doctor, (row['id'],))
-                    doctor_profile = cursor.fetchone()
-                except:
-                    doctor_profile = None
+    role = user["user_type"]
 
-                if not doctor_profile or not doctor_profile.get('specialty') or not doctor_profile.get('facility') or not doctor_profile.get('dcontact'):
-                    # Incomplete profile - redirect to profile setup
-                    redirect_page = url_for('doc_profile_setup_bp.doctor_profile_setup')
-                    message_suffix = "Please complete your profile"
-                else:
-                    # Redirect to doctor dashboard
-                    redirect_page = url_for('doctor_bp.doctor_dashboard')
-                    message_suffix = "Welcome Doctor!"
-                    
-            elif user_type == "client":
-                # Check if patient has complete profile
-                try:
-                    sql_check = """
-                        SELECT id, age, last_period 
-                        FROM user_profiles 
-                        WHERE user_id = %s
-                    """
-                    cursor.execute(sql_check, (row['id'],))
-                    profile = cursor.fetchone()
-                except:
-                    profile = None
-                
-                if profile and profile.get('age') and profile.get('last_period'):
-                    # Redirect to patient dashboard
-                    redirect_page = url_for('patient_bp.patient_dashboard')
-                    message_suffix = "Welcome Patient!"
-                else:
-                    # Incomplete profile - redirect to profile setup
-                    redirect_page = url_for('patient_bp.patient_dashboard')
-                    message_suffix = "Please complete your profile"
-                    
-            else:
-                # Default fallback
-                redirect_page = url_for('login_bp.login_page')
-                message_suffix = "Unknown user type"
+    # ================= REDIRECT FIX =================
+    if role == "admin":
+        redirect_url = url_for("admin.admin_dashboard")
 
-            return jsonify({
-                "success": True, 
-                "message": f"Login successful! {message_suffix}",
-                "redirect": redirect_page,
-                "user_type": user_type,
-                "firstname": row['firstname']
-            })
+    elif role == "doctor":
+        redirect_url = url_for("doctor_bp.doctor_dashboard")
 
-    except pymysql.Error as e:
-        print(f"Database error: {str(e)}")
-        return jsonify({
-            "success": False, 
-            "message": "A database error occurred. Please try again."
-        })
-    except Exception as e:
-        print(f"Unexpected error: {str(e)}")
-        return jsonify({
-            "success": False, 
-            "message": f"An error occurred: {str(e)}"
-        })
-    finally:
-        if conn:
-            conn.close()
+    elif role == "client":
+        redirect_url = url_for("patient_bp.patient_dashboard")
 
-# ==============================================================================
-# LOGOUT ROUTE
-# ==============================================================================
+    else:
+        redirect_url = url_for("login_bp.login_page")
+
+    return jsonify({
+        "success": True,
+        "redirect": redirect_url
+    })
+
+# ================= LOGIN PAGE =================
+@login_bp.route('/login', methods=['GET'])
+def login_page():
+    return render_template("login.html")
+
+# ================= LOGOUT =================
 @login_bp.route('/logout')
 def logout():
     session.clear()
-    return jsonify({
-        "success": True, 
-        "message": "You have been logged out."
-    })
-
-# ==============================================================================
-# LOGIN PAGE ROUTE (GET)
-# ==============================================================================
-@login_bp.route('/login', methods=['GET'])
-def login_page():
-    """Serve the login page"""
-    try:
-        return render_template('login.html')
-    except:
-        return """
-        <!DOCTYPE html>
-        <html>
-        <head><title>Login</title></head>
-        <body>
-            <h1>MotherCare Login</h1>
-            <p>Please use the login form to access your account.</p>
-            <p><a href="/static/login.html">Click here to login</a></p>
-        </body>
-        </html>
-        """
+    return jsonify({"success": True})
