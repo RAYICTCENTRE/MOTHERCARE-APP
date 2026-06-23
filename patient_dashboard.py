@@ -1,16 +1,14 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Blueprint, render_template, session, redirect, url_for
 from functools import wraps
 from login import get_db_connection
 import traceback
 
-admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+patient_bp = Blueprint('patient_bp', __name__, url_prefix='/patient')
 
-# ======================
-# ADMIN AUTH DECORATOR
-# ======================
-def admin_required(f):
+
+def patient_required(f):
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def wrapper(*args, **kwargs):
         if 'user_id' not in session:
             return redirect(url_for('login_bp.login_page'))
 
@@ -21,7 +19,7 @@ def admin_required(f):
                 cursor.execute("SELECT user_type FROM users WHERE id=%s", (session['user_id'],))
                 user = cursor.fetchone()
 
-            if not user or user.get('user_type') != 'admin':
+            if not user or user.get('user_type') != 'client':
                 return redirect(url_for('login_bp.login_page'))
 
         except Exception as e:
@@ -32,61 +30,46 @@ def admin_required(f):
                 conn.close()
 
         return f(*args, **kwargs)
-    return decorated_function
+    return wrapper
 
 
-# ======================
-# DASHBOARD
-# ======================
-@admin_bp.route('/dashboard')
-@admin_required
-def admin_dashboard():
+@patient_bp.route('/dashboard')
+@patient_required
+def patient_dashboard():
     conn = None
     try:
         conn = get_db_connection()
         with conn.cursor() as cursor:
 
-            # DOCTORS
-            try:
-                cursor.execute("""
-                    SELECT id, full_name, email, specialization, qualification,
-                           experience_years, status, created_at
-                    FROM doctors
-                    ORDER BY created_at DESC
-                """)
-                doctors = cursor.fetchall()
-            except:
-                cursor.execute("""
-                    SELECT id, firstname AS full_name, email,
-                           'N/A' AS specialization, 'N/A' AS qualification,
-                           0 AS experience_years, 'active' AS status,
-                           created_at
-                    FROM users
-                    WHERE user_type='doctor'
-                """)
-                doctors = cursor.fetchall()
+            cursor.execute("""
+                SELECT age, last_period, expected_delivery
+                FROM user_profiles
+                WHERE user_id=%s
+            """, (session['user_id'],))
+            profile = cursor.fetchone()
 
-            # PATIENTS
-            try:
-                cursor.execute("SELECT id, full_name, email, created_at FROM patients")
-                patients = cursor.fetchall()
-            except:
-                cursor.execute("""
-                    SELECT id, firstname AS full_name, email, created_at
-                    FROM users
-                    WHERE user_type='client'
-                """)
-                patients = cursor.fetchall()
+            cursor.execute("""
+                SELECT * FROM consultations
+                WHERE patient_id=%s
+            """, (session['user_id'],))
+            consultations = cursor.fetchall()
+
+            cursor.execute("""
+                SELECT * FROM symptom_logs
+                WHERE user_id=%s
+            """, (session['user_id'],))
+            symptoms = cursor.fetchall()
 
         return render_template(
-            'admin_dashboard.html',
-            doctors=doctors,
-            patients=patients
+            'patient_dashboard.html',
+            profile=profile,
+            consultations=consultations,
+            symptoms=symptoms
         )
 
     except Exception as e:
         print(traceback.format_exc())
-        return f"Admin error: {str(e)}"
+        return f"Patient error: {str(e)}"
     finally:
         if conn:
             conn.close()
