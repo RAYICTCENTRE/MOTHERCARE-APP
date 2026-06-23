@@ -17,8 +17,8 @@ from send_reply import send_reply_blueprint
 # Dashboard Framework Workspaces & Administrator Action Pipelines
 from admin_dashboard import admin_bp  
 from reject_doctor import reject_doctor_blueprint
-from patient_dashboard import patient_dashboard_blueprint
-from doctor_dashboard import doctor_blueprint
+from patient_dashboard import patient_bp  # Fixed import name
+from doctor_dashboard import doctor_bp  # Fixed import name
 
 # User Profile Maintenance & Async Summary Payload Blueprints
 from get_user_profile import user_profile_blueprint
@@ -52,10 +52,10 @@ app.register_blueprint(update_msg_blueprint)
 app.register_blueprint(send_doctor_reply_blueprint)
 app.register_blueprint(send_reply_blueprint)
 
-app.register_blueprint(admin_bp)  # ✅ Registered correctly here
+app.register_blueprint(admin_bp)
 app.register_blueprint(reject_doctor_blueprint)
-app.register_blueprint(patient_dashboard_blueprint)
-app.register_blueprint(doctor_blueprint)
+app.register_blueprint(patient_bp)  # Fixed
+app.register_blueprint(doctor_bp)  # Fixed
 
 app.register_blueprint(user_profile_blueprint)
 app.register_blueprint(doc_profile_fetch_blueprint)
@@ -74,6 +74,7 @@ app.register_blueprint(login_bp)
 @app.route('/')
 def index():
     return render_template('screen2.html')
+
 # ==============================================================================
 # 5. TEST DATABASE CONNECTION ROUTE
 # ==============================================================================
