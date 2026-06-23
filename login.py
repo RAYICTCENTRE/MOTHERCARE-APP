@@ -1,7 +1,7 @@
 import re
 import os
 import pymysql
-from flask import Blueprint, request, jsonify, session, redirect, url_for
+from flask import Blueprint, request, jsonify, session, redirect, url_for, render_template
 
 # ==============================================================================
 # BLUEPRINT INITIALIZATION
@@ -169,14 +169,14 @@ def login():
             session['logged_in'] = True
 
             # ==============================================================
-            # ✅ ROLE-BASED REDIRECTION - UPDATED FOR FLASK BLUEPRINTS
+            # ✅ ROLE-BASED REDIRECTION - FIXED BLUEPRINT NAMES
             # ==============================================================
             user_type = row['user_type']
             redirect_page = ""
             message_suffix = ""
 
             if user_type == "admin":
-                # Redirect to admin dashboard (Flask blueprint route)
+                # Redirect to admin dashboard
                 redirect_page = url_for('admin.admin_dashboard')
                 message_suffix = "Welcome Admin!"
                 
@@ -189,40 +189,46 @@ def login():
                     })
                 
                 # Check if doctor has complete profile
-                sql_doctor = """
-                    SELECT id, specialty, facility, dcontact 
-                    FROM doctors 
-                    WHERE user_id = %s
-                """
-                cursor.execute(sql_doctor, (row['id'],))
-                doctor_profile = cursor.fetchone()
+                try:
+                    sql_doctor = """
+                        SELECT id, specialty, facility, dcontact 
+                        FROM doctors 
+                        WHERE user_id = %s
+                    """
+                    cursor.execute(sql_doctor, (row['id'],))
+                    doctor_profile = cursor.fetchone()
+                except:
+                    doctor_profile = None
 
                 if not doctor_profile or not doctor_profile.get('specialty') or not doctor_profile.get('facility') or not doctor_profile.get('dcontact'):
                     # Incomplete profile - redirect to profile setup
-                    redirect_page = url_for('doctor_profile_setup_bp.doctor_profile_setup')
+                    redirect_page = url_for('doc_profile_setup_bp.doctor_profile_setup')
                     message_suffix = "Please complete your profile"
                 else:
-                    # Redirect to doctor dashboard (Flask blueprint route)
+                    # Redirect to doctor dashboard
                     redirect_page = url_for('doctor_bp.doctor_dashboard')
                     message_suffix = "Welcome Doctor!"
                     
             elif user_type == "client":
                 # Check if patient has complete profile
-                sql_check = """
-                    SELECT id, age, last_period 
-                    FROM user_profiles 
-                    WHERE user_id = %s
-                """
-                cursor.execute(sql_check, (row['id'],))
-                profile = cursor.fetchone()
+                try:
+                    sql_check = """
+                        SELECT id, age, last_period 
+                        FROM user_profiles 
+                        WHERE user_id = %s
+                    """
+                    cursor.execute(sql_check, (row['id'],))
+                    profile = cursor.fetchone()
+                except:
+                    profile = None
                 
                 if profile and profile.get('age') and profile.get('last_period'):
-                    # Redirect to patient dashboard (Flask blueprint route)
+                    # Redirect to patient dashboard
                     redirect_page = url_for('patient_bp.patient_dashboard')
                     message_suffix = "Welcome Patient!"
                 else:
                     # Incomplete profile - redirect to profile setup
-                    redirect_page = url_for('patient_dashboard.patient_dashboard')  # Or your profile setup page
+                    redirect_page = url_for('patient_bp.patient_dashboard')
                     message_suffix = "Please complete your profile"
                     
             else:
@@ -271,4 +277,17 @@ def logout():
 @login_bp.route('/login', methods=['GET'])
 def login_page():
     """Serve the login page"""
-    return render_template('login.html')  # You'll need to create this
+    try:
+        return render_template('login.html')
+    except:
+        return """
+        <!DOCTYPE html>
+        <html>
+        <head><title>Login</title></head>
+        <body>
+            <h1>MotherCare Login</h1>
+            <p>Please use the login form to access your account.</p>
+            <p><a href="/static/login.html">Click here to login</a></p>
+        </body>
+        </html>
+        """
