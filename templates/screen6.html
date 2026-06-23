@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Pre-eclampsia Checker - MotherCare</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: linear-gradient(135deg, #fff5e8 0%, #ffe8d4 100%);
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    max-width: 650px;
+    width: 100%;
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+h2 {
+    color: #d35400;
+    font-size: 24px;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 6px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #b86f2c;
+    font-size: 13px;
+    margin-bottom: 24px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #ffe0b5;
+}
+
+/* ========== ENTRY BUTTONS ========== */
+.entry-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 0;
+    transition: all 0.3s ease;
+}
+
+.entry-grid.hidden {
+    display: none;
+}
+
+.entry-btn {
+    padding: 30px 16px;
+    border: 2px solid #ffe0b5;
+    border-radius: 16px;
+    background: #fffef7;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+    font-family: inherit;
+}
+
+.entry-btn:hover {
+    border-color: #e67e22;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(230,126,34,0.12);
+}
+
+.entry-btn.active {
+    border-color: #e67e22;
+    background: #fef5ed;
+    box-shadow: 0 4px 16px rgba(230,126,34,0.15);
+}
+
+.entry-btn .icon {
+    font-size: 40px;
+    margin-bottom: 12px;
+    display: block;
+}
+
+.entry-btn .title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a2e1a;
+    margin-bottom: 6px;
+}
+
+.entry-btn .desc {
+    font-size: 12px;
+    color: #8a7a6a;
+    line-height: 1.4;
+    margin-bottom: 8px;
+}
+
+.entry-btn .badge {
+    display: inline-block;
+    background: #e67e22;
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 3px 12px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ========== MODE CONTENT ========== */
+.mode-content {
+    display: none;
+    animation: fadeIn 0.4s ease;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.mode-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ========== MODE HEADER ========== */
+.mode-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #ffe0b5;
+}
+
+.mode-header .back-btn {
+    background: none;
+    border: none;
+    color: #e67e22;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.mode-header .back-btn:hover {
+    background: rgba(230, 126, 34, 0.08);
+}
+
+.mode-header .mode-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a2e1a;
+}
+
+.mode-header .mode-icon {
+    font-size: 24px;
+}
+
+.form-section {
+    margin-bottom: 16px;
+}
+
+.form-section label {
+    display: block;
+    font-weight: 600;
+    color: #e67e22;
+    margin-bottom: 6px;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+}
+
+.form-section label .required {
+    color: #e74c3c;
+    margin-left: 3px;
+}
+
+.form-section label .optional {
+    color: #95a5a6;
+    font-weight: 400;
+    font-size: 11px;
+    margin-left: 4px;
+}
+
+.form-section .hint {
+    font-size: 11px;
+    color: #b86f2c;
+    margin-top: 4px;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #ffe0b5;
+    border-radius: 12px;
+    font-size: 14px;
+    transition: all 0.2s;
+    font-family: inherit;
+    background: #fffef7;
+}
+
+input:focus, select:focus {
+    outline: none;
+    border-color: #e67e22;
+    box-shadow: 0 0 0 2px rgba(230,126,34,0.1);
+}
+
+input:disabled, select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f5f0e6;
+}
+
+input.optional-field {
+    border-color: #d4d4d4;
+    background: #fafafa;
+}
+
+input.optional-field:focus {
+    border-color: #e67e22;
+    background: #fffef7;
+}
+
+select[multiple] {
+    height: 100px;
+}
+
+select[multiple]:disabled {
+    background: #f5f0e6;
+}
+
+.editable-field {
+    background: #fffef7;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #2c3e50;
+    font-weight: 500;
+    border: 2px solid #ffe0b5;
+    width: 100%;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.editable-field:focus {
+    outline: none;
+    border-color: #e67e22;
+    box-shadow: 0 0 0 2px rgba(230,126,34,0.1);
+}
+
+.symptom-tags {
+    background: #fffef7;
+    border-radius: 12px;
+    padding: 10px;
+    margin: 8px 0;
+    min-height: 50px;
+    border: 1px solid #ffe0b5;
+}
+
+.symptom-tags p {
+    font-size: 11px;
+    color: #b86f2c;
+    margin-bottom: 8px;
+}
+
+#symptom-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    list-style: none;
+}
+
+#symptom-list li {
+    background: #e67e22;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin: 8px 0;
+}
+
+.btn {
+    flex: 1;
+    padding: 10px 14px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    text-align: center;
+}
+
+.btn-primary {
+    background: #e67e22;
+    color: white;
+    box-shadow: 0 4px 12px rgba(230,126,34,0.2);
+}
+
+.btn-primary:hover {
+    background: #d35400;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: #95a5a6;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d;
+}
+
+.bp-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.two-col {
+    display: flex;
+    gap: 15px;
+}
+
+.two-col > * {
+    flex: 1;
+}
+
+/* ========== NLP TEXT INPUT ========== */
+.nlp-input {
+    display: none;
+}
+
+.nlp-input.show {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+.checkbox-input {
+    display: block;
+}
+
+.checkbox-input.hidden {
+    display: none;
+}
+
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ffe0b5;
+    border-radius: 12px;
+    font-size: 13px;
+    font-family: inherit;
+    resize: none;
+    margin: 8px 0;
+    background: #fffef7;
+    height: 110px;
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #e67e22;
+}
+
+/* ========== INPUT TOGGLE ========== */
+.input-toggle {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+    padding: 4px;
+    background: #f5f0e6;
+    border-radius: 12px;
+    border: 1px solid #ffe0b5;
+}
+
+.input-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: transparent;
+    color: #8a7a6a;
+    font-family: inherit;
+    text-align: center;
+}
+
+.input-btn i {
+    margin-right: 6px;
+    font-size: 13px;
+}
+
+.input-btn.active {
+    background: linear-gradient(135deg, #e67e22, #f39c12);
+    color: white;
+    box-shadow: 0 2px 8px rgba(230, 126, 34, 0.25);
+}
+
+.input-btn:hover:not(.active) {
+    color: #d35400;
+}
+
+/* ========== SHORT BUTTONS ========== */
+.short-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin: 15px 0;
+}
+
+.short-btn {
+    flex: 0 1 auto;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: #34495e;
+    color: white;
+    text-decoration: none;
+}
+
+.short-btn:hover {
+    background: #2c3e50;
+    transform: translateY(-1px);
+}
+
+/* ========== OUTCOME SCREEN ========== */
+.outcome-box {
+    display: none;
+    background: #fdfefe;
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 15px;
+    border: 2px solid #ffe0b5;
+    animation: fadeIn 0.4s ease;
+}
+
+.outcome-box.show {
+    display: block;
+}
+
+.outcome-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.advice-content {
+    background: #fdfaf6;
+    padding: 15px;
+    border-radius: 12px;
+    border-left: 4px solid #e67e22;
+    white-space: pre-wrap;
+    font-size: 14px;
+    color: #34495e;
+    line-height: 1.6;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Pre-eclampsia Guardian Evaluator</h2>
+    <p class="subtitle">Evaluate and analyze gestational risks natively using AI model tracking metrics</p>
+
+    <!-- ENTRY MATRIX GRID BUTTONS -->
+    <div class="entry-grid" id="entryGrid">
+        <div class="entry-btn" onclick="openMode('home')">
+            <span class="icon">🏠</span>
+            <span class="title">Home Self-Check</span>
+            <span class="desc">Quick regular monitoring check using basic maternal metrics</span>
+            <span class="badge">Patient</span>
+        </div>
+        <div class="entry-btn" onclick="openMode('clinic')">
+            <span class="icon">🏥</span>
+            <span class="title">Clinical Check</span>
+            <span class="desc">Deep evaluation utilizing precise laboratory indicators</span>
+            <span class="badge">Practitioner</span>
+        </div>
+    </div>
+
+    <!-- MAIN EVALUATOR INTERACTION FRAMEWORK -->
+    <div class="mode-content" id="evaluatorWorkspace">
+        <div class="mode-header">
+            <button type="button" class="back-btn" onclick="exitWorkspace()">← Exit Evaluator</button>

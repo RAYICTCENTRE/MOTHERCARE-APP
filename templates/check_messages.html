@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Chat with Dr. {{ doctor.firstname }} {{ doctor.lastname }}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fff5e8 0%, #ffe8d4 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-container {
+            max-width: 800px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 40px);
+            overflow: hidden;
+        }
+        .chat-header {
+            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .chat-header h2 { font-size: 20px; }
+        .back-btn, .logout-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .back-btn { background: rgba(255,255,255,0.2); color: white; }
+        .logout-btn { background: #ff4757; color: white; }
+        .back-btn:hover, .logout-btn:hover { transform: translateY(-2px); }
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .message.sent { justify-content: flex-end; }
+        .message.received { justify-content: flex-start; }
+        .message-content {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 20px;
+            word-wrap: break-word;
+        }
+        .message.sent .message-content {
+            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+        .message.received .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .message-time {
+            font-size: 10px;
+            margin-top: 5px;
+            opacity: 0.7;
+        }
+        .message.sent .message-time { text-align: right; }
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+        .input-area textarea {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            resize: none;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .input-area textarea:focus {
+            outline: none;
+            border-color: #e67e22;
+        }
+        .send-btn {
+            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .send-btn:hover { transform: scale(1.05); }
+        .no-messages { text-align: center; padding: 50px; color: #999; }
+        @media (max-width: 768px) {
+            .chat-container { margin: 10px; height: calc(100vh - 20px); }
+            .message-content { max-width: 85%; }
+            .chat-header { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        <h2>💬 Dr. {{ doctor.firstname }} {{ doctor.lastname }}</h2>
+        <div>
+            <button class="back-btn" onclick="goBack()">← Back</button>
+            <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+        </div>
+    </div>
+    
+    <div class="messages-area" id="messagesArea">
+        <div class="no-messages">💬 Loading messages...</div>
+    </div>
+    
+    <div class="input-area">
+        <textarea id="messageInput" rows="2" placeholder="Type your message here... (Press Enter to send)"></textarea>
+        <button class="send-btn" onclick="sendMessage()">Send ✉️</button>
+    </div>
+</div>
+
+<script>
+// Safely outputting Python template injections into global scope variables
+const doctorId = {{ doctor_id }};
+let lastMessageCount = 0;
+
+// Helper function to escape HTML strings safely in JS context
+function escapeHtml(text) {
+    if(!text) return '';
+    return text
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+}
+
+function formatDate(dateStr) {
+    if(!dateStr) return '';
+    try {
+        const d = new Date(dateStr);
+        return d.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+    } catch(e) {
+        return dateStr;
+    }
+}
+
+function scrollToBottom() {
+    const messagesArea = document.getElementById('messagesArea');
+    messagesArea.scrollTop = messagesArea.scrollHeight;
+}
+
+function goBack() {
+    window.location.href = "/patient-dashboard";
+}
+
+function logout() {
+    window.location.href = "/admin-dashboard?action=logout";
+}
+
+function loadMessages() {
+    // Points toward your message-fetching Flask route
+    fetch(`/fetch-messages?doctor_id=${doctorId}&t=${Date.now()}`)
+        .then(response => response.json())
+        .then(messages => {
+            const messagesArea = document.getElementById('messagesArea');
+            
+            if(messages.error) {
+                messagesArea.innerHTML = '<div class="no-messages">⚠️ Error loading messages</div>';
+                return;
+            }
+            
+            if(messages.length === 0) {
+                messagesArea.innerHTML = '<div class="no-messages">💬 No messages yet. Send a message to the doctor!</div>';
+                return;
+            }
+            
+            let html = '';
+            messages.forEach(msg => {
+                const isSent = msg.sender === 'patient';
+                html += `
+                    <div class="message ${isSent ? 'sent' : 'received'}">
+                        <div class="message-content">
+                            ${escapeHtml(msg.message)}
+                            <div class="message-time">
+                                ${formatDate(msg.created_at)}
+                                ${isSent ? '<span> ✓</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            messagesArea.innerHTML = html;
+            scrollToBottom();
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('messagesArea').innerHTML = '<div class="no-messages">⚠️ Error loading messages</div>';
+        });
+}
+
+function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const message = input.value.trim();
+    
+    if(!message) {
+        alert('Please enter a message');
+        return;
+    }
+    
+    // Submitting payload as a clean JSON body to match Flask's request.get_json() expectation
+    fetch('/send-message', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            doctor_id: doctorId,
+            message: message
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            input.value = '';
+            loadMessages();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error sending message:', error);
+        alert('A connection break occurred while processing your message transmission.');
+    });
+}
+
+// Automatically mount structural pooling sequences
+loadMessages();
+setInterval(loadMessages, 3000);
+
+// Capture Enter key triggers while avoiding breaking multi-line shifts
+document.getElementById('messageInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+</script>
+
+</body>
+</html>

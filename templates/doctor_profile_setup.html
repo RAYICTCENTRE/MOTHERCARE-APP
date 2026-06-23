@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Doctor Profile - MotherCare</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fff5e8 0%, #ffe8d4 100%);
+            font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .profile-container {
+            max-width: 600px;
+            width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            overflow: hidden;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+            padding: 28px 32px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .form-content {
+            padding: 32px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #334155;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group label .required {
+            color: #e74c3c;
+            margin-left: 3px;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+            background: #fefcf8;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #e67e22;
+            box-shadow: 0 0 0 3px rgba(230,126,34,0.1);
+            background: white;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Phone Row */
+        .phone-row {
+            display: flex;
+            gap: 12px;
+        }
+
+        .phone-row select {
+            width: 35%;
+        }
+
+        .phone-row input {
+            width: 65%;
+        }
+
+        /* File Upload */
+        .file-upload {
+            border: 2px dashed #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fefcf8;
+        }
+
+        .file-upload:hover {
+            border-color: #e67e22;
+            background: #fff5e8;
+        }
+
+        .file-upload input {
+            display: none;
+        }
+
+        .file-upload-label {
+            cursor: pointer;
+            color: #e67e22;
+            font-weight: 600;
+        }
+
+        .photo-preview {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        .photo-preview img {
+            max-width: 120px;
+            max-height: 120px;
+            border-radius: 60px;
+            object-fit: cover;
+            border: 3px solid #e67e22;
+        }
+
+        /* Message */
+        .message {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .message.success {
+            background: #dcfce7;
+            color: #16a34a;
+            display: block;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #dc2626;
+            display: block;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(230,126,34,0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(230,126,34,0.4);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #64748b;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+
+        .link-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .link-buttons a {
+            color: #e67e22;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .link-buttons a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            .profile-container {
+                border-radius: 24px;
+            }
+            
+            .header {
+                padding: 24px 20px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+            
+            .form-content {
+                padding: 24px;
+            }
+            
+            .phone-row {
+                flex-direction: column;
+                gap: 8px;
+            }
+            
+            .phone-row select,
+            .phone-row input {
+                width: 100%;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .link-buttons {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="profile-container">
+    <div class="header">
+        <h1>Doctor Profile</h1>
+        <p>Complete your professional details</p>
+    </div>
+
+    <div class="form-content">
+        <!-- System Response Messages Block -->
+        <div id="message" class="message"></div>
+
+        <form id="profileForm" enctype="multipart/form-data">
+            <!-- Profile Photo Upload Field -->
+            <div class="form-group">
+                <label>Profile Photo <span class="required">*</span></label>
+                <div class="file-upload" onclick="document.getElementById('photoInput').click()">
+                    <input type="file" name="photo" id="photoInput" accept="image/*" style="display:none;" onchange="previewPhoto(this)" required>
+                    <div class="file-upload-label">
+                        📸 Click to upload or drag photo here
+                    </div>
+                    <div style="font-size:12px; color:#999; margin-top:8px;">
+                        Recommended: Square image, max 2MB
+                    </div>
+                </div>
+                <div class="photo-preview" id="photoPreview"></div>
+            </div>
+
+            <!-- Specialty Selection Dropdown -->
+            <div class="form-group">
+                <label>Specialty Focus <span class="required">*</span></label>
+                <select name="specialty" required>
+                    <option value="">Select your specialty</option>
+                    <option value="Obstetrician">Obstetrician</option>
+                    <option value="Gynecologist">Gynecologist</option>
+                    <option value="General Practitioner">General Practitioner</option>
+                    <option value="Midwife">Midwife</option>
+                    <option value="Maternal Health Specialist">Maternal Health Specialist</option>
+                </select>
+            </div>
+
+            <!-- Hospital Facility Input Field -->
+            <div class="form-group">
+                <label>Medical Facility / Hospital <span class="required">*</span></label>
+                <input type="text" name="facility" placeholder="e.g., Mulago Hospital" required>
+            </div>
+
+            <!-- Qualifications Input Field -->
+            <div class="form-group">
+                <label>Qualifications & Background <span class="required">*</span></label>
+                <textarea name="qualifications" placeholder="e.g., MBChB, MMed in Obstetrics and Gynecology" required></textarea>
+            </div>
+
+            <!-- Contact Phone Input Field -->
+            <div class="form-group">
+                <label>Phone Number <span class="required">*</span></label>
+                <div class="phone-row">
+                    <select name="countryCode" id="countryCode" required>
+                        <option value="+256">🇺🇬 Uganda (+256)</option>
+                        <option value="+254">🇰🇪 Kenya (+254)</option>
+                        <option value="+255">🇹🇿 Tanzania (+255)</option>
+                    </select>
+                    <input type="tel" name="dContact" placeholder="712345678" pattern="[0-9]{9,10}" title="Please enter a valid phone number (9-10 digits without country code)" required>
+                </div>
+            </div>
+

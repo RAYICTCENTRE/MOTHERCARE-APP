@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>My Profile - MotherCare</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #fff5e8 0%, #ffe8d4 100%);
+            font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            padding: 30px 20px;
+        }
+
+        .profile-container {
+            max-width: 500px;
+            width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+            padding: 20px 24px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .progress-section {
+            padding: 16px 24px 12px 24px;
+            background: white;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 11px;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .progress {
+            background: #e2e8f0;
+            height: 6px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #e67e22 0%, #f39c12 100%);
+            border-radius: 10px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .form-content {
+            padding: 0 24px 20px 24px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #e67e22;
+            margin: 20px 0 12px 0;
+            padding-bottom: 6px;
+            border-bottom: 2px solid #ffe0b5;
+        }
+
+        .section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+
+        .form-row label {
+            width: 32%;
+            font-weight: 600;
+            color: #334155;
+            font-size: 13px;
+        }
+
+        .form-row input,
+        .form-row select {
+            width: 68%;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 13px;
+            font-family: inherit;
+            background: #fefcf8;
+        }
+
+        .form-row input:focus,
+        .form-row select:focus {
+            outline: none;
+            border-color: #e67e22;
+            box-shadow: 0 0 0 2px rgba(230,126,34,0.1);
+        }
+
+        .phone-row {
+            display: flex;
+            gap: 10px;
+            width: 68%;
+        }
+
+        .phone-row select {
+            width: 40%;
+            padding: 8px 10px;
+        }
+
+        .phone-row input {
+            width: 60%;
+            padding: 8px 12px;
+        }
+
+        .readonly-value {
+            width: 68%;
+            padding: 8px 12px;
+            background: #f1f5f9;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(230,126,34,0.35);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .message-box {
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 13px;
+            display: none;
+            text-align: center;
+        }
+        .message-box.success { background: #dcfce7; color: #16a34a; display: block; }
+        .message-box.error { background: #fee2e2; color: #dc2626; display: block; }
+
+        @media (max-width: 640px) {
+            .form-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .form-row label {
+                width: 100%;
+            }
+            
+            .form-row input,
+            .form-row select,
+            .readonly-value,
+            .phone-row {
+                width: 100%;
+            }
+            
+            .phone-row {
+                flex-direction: row;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="profile-container">
+    <div class="header">
+        <h1>My Profile</h1>
+        <p>Tell us about yourself for better care</p>
+    </div>
+
+    <div class="progress-section">
+        <div class="progress-label">
+            <span>Profile Complete</span>
+            <span id="progressPercent">0%</span>
+        </div>
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+    </div>
+
+    <!-- Updated form action attribute to route securely into your clean Flask endpoint -->
+    <form id="profileForm" action="/update-profile" method="POST">
+        <div class="form-content">
+            <!-- Basic Info Section -->
+            <div class="section-title">About You</div>
+            
+            <div class="form-row">
+                <label>First Name</label>
+                <div class="readonly-value">{{ user.firstname }}</div>
+            </div>
+            
+            <div class="form-row">
+                <label>Last Name</label>
+                <div class="readonly-value">{{ user.lastname }}</div>
+            </div>
+
+            <div class="form-row">
+                <label>Email Address</label>
+                <div class="readonly-value">{{ user.email }}</div>
+            </div>
+            
+            <div class="form-row">
+                <label>Phone Number</label>
+                <div class="phone-row">
+                    <select name="phoneCountryCode" id="phoneCountryCode">
+                        <option value="+256">Uganda (+256)</option>
+                        <option value="+254">Kenya (+254)</option>
+                        <option value="+255">Tanzania (+255)</option>
+                        <option value="+250">Rwanda (+250)</option>
+                    </select>
+                    <!-- Pre-populating existing value using safe Jinja strings filtering logic -->
+                    <input type="tel" name="phone" id="phone" value="{{ user.phone or '' }}" placeholder="712345678">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <label>Age (Years)</label>
+                <input type="number" name="age" id="age" value="{{ profile.age or '' }}" min="12" max="60" placeholder="e.g. 25">
+            </div>
+
+            <div class="form-row">
+                <label>Nationality</label>
+                <input type="text" name="nationality" id="nationality" value="{{ profile.nationality or '' }}" placeholder="e.g. Ugandan">
+            </div>
+
+            <!-- Demographics and Location Data -->
+            <div class="section-title">Your Location</div>
+            <div class="form-row"><label>District</label><input type="text" name="district" id="district" value="{{ profile.district or '' }}"></div>
+            <div class="form-row"><label>Sub County</label><input type="text" name="subCounty" id="subCounty" value="{{ profile.sub_county or '' }}"></div>
+            <div class="form-row"><label>Parish</label><input type="text" name="parish" id="parish" value="{{ profile.parish or '' }}"></div>
+            <div class="form-row"><label>Village</label><input type="text" name="village" id="village" value="{{ profile.village or '' }}"></div>
+            <div class="form-row"><label>Nearest Health Center</label><input type="text" name="nearestHealth" id="nearestHealth" value="{{ profile.nearest_health or '' }}"></div>
+
+            <!-- Emergency Contact Information -->
+            <div class="section-title">Next of Kin (Emergency)</div>
+            <div class="form-row"><label>Kin Name</label><input type="text" name="kinName" id="kinName" value="{{ profile.kin_name or '' }}"></div>
+            <div class="form-row"><label>Relationship</label><input type="text" name="kinRelationship" id="kinRelationship" value="{{ profile.kin_relationship or '' }}"></div>
+            <div class="form-row">
+                <label>Kin Contact</label>
+                <div class="phone-row">
+                    <select name="kinCountryCode" id="kinCountryCode">
+                        <option value="+256">+256</option>
+                        <option value="+254">+254</option>

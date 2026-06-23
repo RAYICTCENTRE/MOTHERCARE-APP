@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Login - MotherCare</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #fff5e8 0%, #ffe8d4 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .login-container {
+            max-width: 420px;
+            width: 100%;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+            padding: 36px 28px 32px;
+            animation: fadeInUp 0.5s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .logo { text-align: center; margin-bottom: 20px; }
+        .logo h1 { font-size: 30px; font-weight: 800; color: #e67e22; letter-spacing: -0.5px; }
+        .logo p { color: #b86f2c; font-size: 13px; font-weight: 500; margin-top: 2px; }
+        .welcome-text { text-align: center; margin-bottom: 24px; }
+        .welcome-text h2 { font-size: 22px; color: #1e3a8a; font-weight: 700; }
+        .welcome-text p { color: #6c757d; font-size: 14px; margin-top: 4px; }
+        .login-tabs { display: flex; gap: 8px; margin-bottom: 24px; background: #f1f5f9; border-radius: 14px; padding: 4px; }
+        .login-tab {
+            flex: 1; padding: 11px 8px; text-align: center; border: none; background: transparent;
+            border-radius: 11px; font-size: 14px; font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.3s ease;
+        }
+        .login-tab.active { background: white; color: #e67e22; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+        .login-tab:hover:not(.active) { background: rgba(255,255,255,0.5); }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 5px; }
+        .input-wrapper {
+            position: relative; display: flex; align-items: center; border: 2px solid #e2e8f0;
+            border-radius: 14px; background: #fafafa; transition: all 0.3s ease; overflow: hidden;
+        }
+        .input-wrapper:focus-within { border-color: #e67e22; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); background: white; }
+        .country-select {
+            padding: 14px 8px 14px 12px; border: none; background: transparent; font-size: 14px;
+            font-weight: 600; color: #334155; cursor: pointer; outline: none; min-width: 82px; border-right: 2px solid #e2e8f0; flex-shrink: 0;
+        }
+        .country-select:focus { outline: none; }
+        .input-phone {
+            flex: 1; padding: 14px 16px; border: none; background: transparent; font-size: 15px; outline: none;
+        }
+        .input-phone::placeholder { color: #a0aec0; }
+        .input-email, .input-password {
+            width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 14px;
+            font-size: 15px; transition: all 0.3s ease; background: #fafafa; outline: none;
+        }
+        .input-email:focus, .input-password:focus { border-color: #e67e22; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); background: white; }
+        .input-email::placeholder, .input-password::placeholder { color: #a0aec0; }
+        .forgot-row { text-align: right; margin-bottom: 22px; }
+        .forgot-link { color: #e67e22; text-decoration: none; font-size: 13px; font-weight: 500; }
+        .forgot-link:hover { text-decoration: underline; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; text-align: center; text-decoration: none; display: block; }
+        .btn-login { background: linear-gradient(135deg, #e67e22, #f39c12); color: white; box-shadow: 0 4px 14px rgba(230,126,34,0.35); margin-bottom: 12px; }
+        .btn-login:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(230,126,34,0.45); }
+        .btn-login:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+        .btn-signup { background: white; color: #e67e22; border: 2px solid #e67e22; margin-bottom: 10px; }
+        .btn-signup:hover { background: #fff5e8; }
+        .btn-back { background: #f1f5f9; color: #64748b; }
+        .btn-back:hover { background: #e2e8f0; }
+        .divider { text-align: center; margin: 18px 0; position: relative; }
+        .divider::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: #e2e8f0; }
+        .divider span { background: white; padding: 0 14px; position: relative; z-index: 1; color: #94a3b8; font-size: 12px; font-weight: 500; }
+        .alert-box { padding: 12px 16px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; display: none; text-align: center; font-weight: 500; }
+        .alert-danger { background-color: #fde8e8; color: #9b1c1c; border: 1px solid #f8b4b4; display: block; }
+        .alert-success { background-color: #def7ec; color: #03543f; border: 1px solid #84e1bc; display: block; }
+        .spinner { display: none; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s ease infinite; margin: 0 auto; }
+        .btn-login.loading .spinner { display: inline-block; }
+        .btn-login.loading .btn-text { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 480px) {
+            .login-container { padding: 28px 18px 24px; }
+            .logo h1 { font-size: 26px; }
+            .welcome-text h2 { font-size: 20px; }
+            .country-select { min-width: 72px; font-size: 13px; padding: 12px 6px 12px 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <div class="logo">
+            <h1>MotherCare</h1>
+            <p>Maternal Healthcare Ecosystem</p>
+        </div>
+
+        <div class="welcome-text">
+            <h2>Welcome Back</h2>
+            <p>Sign in to continue your journey</p>
+        </div>
+
+        <div class="login-tabs">
+            <button type="button" class="login-tab active" id="tab-phone" onclick="switchTab('phone')">📱 Phone Number</button>
+            <button type="button" class="login-tab" id="tab-email" onclick="switchTab('email')">✉️ Email Address</button>
+        </div>
+
+        <div id="alert" class="alert-box"></div>
+
+        <form id="loginForm">
+            <!-- Phone Entry Segment -->
+            <div class="form-group" id="phone-group">
+                <label>Phone Number</label>
+                <div class="input-wrapper">
+                    <select class="country-select" id="country_code" name="country_code">
+                        <option value="+256" selected>🇺🇬 +256</option>
+                        <option value="+254">🇰🇪 +254</option>
+                        <option value="+255">🇹🇿 +255</option>
+                        <option value="+250">🇷🇼 +250</option>
+                        <option value="+257">🇧🇮 +257</option>
+                        <option value="+211">🇸🇸 +211</option>
+                        <option value="+27">🇿🇦 +27</option>
+                        <option value="+233">🇬🇭 +233</option>
+                        <option value="+234">🇳🇬 +234</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                    </select>
+                    <input type="tel" class="input-phone" id="phone_field" placeholder="712345678">
+                </div>
+            </div>
+
+            <!-- Email Entry Segment -->
+            <div class="form-group" id="email-group" style="display: none;">
+                <label>Email Address</label>
+                <input type="email" class="input-email" id="email_field" placeholder="name@example.com">
+            </div>
+
+            <!-- Password Segment -->
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" class="input-password" id="password" placeholder="••••••••" required>
+            </div>
+
+            <div class="forgot-row">
+                <a href="#" class="forgot-link">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn btn-login" id="submitBtn">
+                <span class="btn-text">Sign In</span>
+                <div class="spinner"></div>
+            </button>
+        </form>
+
+        <div class="divider">
+            <span>New to MotherCare?</span>
+        </div>
+
+        <a href="/static/screen3.html" class="btn btn-signup">Create Account</a>
+        <a href="/" class="btn btn-back">← Back</a>
+    </div>
+
+    <script>
+        let currentMode = 'phone';
+
+        function switchTab(mode) {
+            currentMode = mode;
+            const phoneGroup = document.getElementById('phone-group');
+            const emailGroup = document.getElementById('email-group');
+            const tabPhone = document.getElementById('tab-phone');
+            const tabEmail = document.getElementById('tab-email');
+            const alertBox = document.getElementById('alert');
+
+            if (mode === 'phone') {
+                phoneGroup.style.display = 'block';
+                emailGroup.style.display = 'none';
+                tabPhone.classList.add('active');
+                tabEmail.classList.remove('active');
+            } else {
+                phoneGroup.style.display = 'none';
+                emailGroup.style.display = 'block';
+                tabPhone.classList.remove('active');
+                tabEmail.classList.add('active');
+            }
+            alertBox.style.display = 'none';
+            alertBox.className = 'alert-box';
+        }
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const alertBox = document.getElementById('alert');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = submitBtn.querySelector('.btn-text');
+            
+            alertBox.style.display = 'none';
+            alertBox.className = 'alert-box';
+
+            // Get values based on current mode
+            let loginValue = '';
+            let countryCode = '+256';
+
+            if (currentMode === 'phone') {
+                loginValue = document.getElementById('phone_field').value.trim();
+                countryCode = document.getElementById('country_code').value;
+            } else {
+                loginValue = document.getElementById('email_field').value.trim();
+            }
+
+            const password = document.getElementById('password').value.trim();
+
+            // Validate
+            if (!loginValue || !password) {
+                alertBox.className = 'alert-box alert-danger';
+                alertBox.innerText = 'Please fill in all fields.';
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            // Validate phone number (if phone mode)
+            if (currentMode === 'phone') {
+                const digitsOnly = loginValue.replace(/\D/g, '');
+                if (digitsOnly.length < 7) {
+                    alertBox.className = 'alert-box alert-danger';
+                    alertBox.innerText = 'Please enter a valid phone number (at least 7 digits).';
+                    alertBox.style.display = 'block';
+                    return;
+                }
+            }
+
+            // Validate email (if email mode)
+            if (currentMode === 'email') {
+                const emailPattern = /^[^@]+@[^@]+\.[^@]+$/;
+                if (!emailPattern.test(loginValue)) {
+                    alertBox.className = 'alert-box alert-danger';
+                    alertBox.innerText = 'Please enter a valid email address.';
+                    alertBox.style.display = 'block';
+                    return;
+                }
+            }
+
+            // Show loading state
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+            btnText.textContent = '';
+
+            try {
+                const formData = new FormData();
+                formData.append('login_input', loginValue);
+                formData.append('password', password);
+                if (currentMode === 'phone') {
+                    formData.append('country_code', countryCode);
+                }
+
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                // Remove loading state
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+                btnText.textContent = 'Sign In';
+
+                if (result.success) {
+                    alertBox.className = 'alert-box alert-success';
+                    alertBox.innerText = result.message || 'Login successful! Redirecting...';
+                    alertBox.style.display = 'block';
+                    
+                    // Redirect after short delay
+                    setTimeout(() => {
+                        window.location.href = result.redirect || '/static/dashboard.html';
+                    }, 1000);
+                } else {
+                    alertBox.className = 'alert-box alert-danger';
+                    alertBox.innerText = result.message || 'Login failed. Please try again.';
+                    alertBox.style.display = 'block';
+                }
+            } catch (error) {
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+                btnText.textContent = 'Sign In';
+                
+                alertBox.className = 'alert-box alert-danger';
+                alertBox.innerText = 'Network error. Please check your connection and try again.';
+                alertBox.style.display = 'block';
+                console.error('Login error:', error);
+            }
+        });
+
+        // Enter key support - already handled by form submit
+    </script>
+</body>
+</html>
