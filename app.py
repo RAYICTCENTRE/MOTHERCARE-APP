@@ -73,7 +73,7 @@ app.register_blueprint(login_bp)
 # ==============================================================================
 @app.route('/')
 def index():
-    return render_template('screen2.html')
+    return render_template('screen1.html')
 
 # ==============================================================================
 # 5. TEST DATABASE CONNECTION ROUTE
