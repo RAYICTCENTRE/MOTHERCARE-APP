@@ -1,12 +1,12 @@
 import re
 import os
 import pymysql
-from flask import Blueprint, request, jsonify, session
+from flask import Blueprint, request, jsonify, session, redirect, url_for
 
 # ==============================================================================
 # BLUEPRINT INITIALIZATION
 # ==============================================================================
-login_bp = Blueprint('login_bp', __name__)  # ✅ This is what app.py imports
+login_bp = Blueprint('login_bp', __name__)
 
 # ==============================================================================
 # DATABASE CONFIGURATION - HARDCODED FOR RAILWAY
@@ -168,31 +168,27 @@ def login():
             session['user_type'] = row['user_type']
             session['logged_in'] = True
 
-            # Determine redirect page based on user type
-            redirect_page = ""
+            # ==============================================================
+            # ✅ ROLE-BASED REDIRECTION - UPDATED FOR FLASK BLUEPRINTS
+            # ==============================================================
             user_type = row['user_type']
+            redirect_page = ""
+            message_suffix = ""
 
-            if user_type == "client":
-                sql_check = """
-                    SELECT id, age, last_period 
-                    FROM user_profiles 
-                    WHERE user_id = %s
-                """
-                cursor.execute(sql_check, (row['id'],))
-                profile = cursor.fetchone()
+            if user_type == "admin":
+                # Redirect to admin dashboard (Flask blueprint route)
+                redirect_page = url_for('admin.admin_dashboard')
+                message_suffix = "Welcome Admin!"
                 
-                if profile and profile.get('age') and profile.get('last_period'):
-                    redirect_page = "/static/dashboard.html"
-                else:
-                    redirect_page = "/static/screen4.html"
-
             elif user_type == "doctor":
+                # Check if doctor is approved
                 if row.get('approved') == 0:
                     return jsonify({
                         "success": False, 
                         "message": "Your account is pending admin approval."
                     })
                 
+                # Check if doctor has complete profile
                 sql_doctor = """
                     SELECT id, specialty, facility, dcontact 
                     FROM doctors 
@@ -202,18 +198,41 @@ def login():
                 doctor_profile = cursor.fetchone()
 
                 if not doctor_profile or not doctor_profile.get('specialty') or not doctor_profile.get('facility') or not doctor_profile.get('dcontact'):
-                    redirect_page = "/static/doctor_profile_setup.html"
+                    # Incomplete profile - redirect to profile setup
+                    redirect_page = url_for('doctor_profile_setup_bp.doctor_profile_setup')
+                    message_suffix = "Please complete your profile"
                 else:
-                    redirect_page = "/static/doctor_dashboard.html"
-
-            elif user_type == "admin":
-                redirect_page = "/admin_dashboard.py"
+                    # Redirect to doctor dashboard (Flask blueprint route)
+                    redirect_page = url_for('doctor_bp.doctor_dashboard')
+                    message_suffix = "Welcome Doctor!"
+                    
+            elif user_type == "client":
+                # Check if patient has complete profile
+                sql_check = """
+                    SELECT id, age, last_period 
+                    FROM user_profiles 
+                    WHERE user_id = %s
+                """
+                cursor.execute(sql_check, (row['id'],))
+                profile = cursor.fetchone()
+                
+                if profile and profile.get('age') and profile.get('last_period'):
+                    # Redirect to patient dashboard (Flask blueprint route)
+                    redirect_page = url_for('patient_bp.patient_dashboard')
+                    message_suffix = "Welcome Patient!"
+                else:
+                    # Incomplete profile - redirect to profile setup
+                    redirect_page = url_for('patient_dashboard.patient_dashboard')  # Or your profile setup page
+                    message_suffix = "Please complete your profile"
+                    
             else:
-                redirect_page = "/static/screen2.html"
+                # Default fallback
+                redirect_page = url_for('login_bp.login_page')
+                message_suffix = "Unknown user type"
 
             return jsonify({
                 "success": True, 
-                "message": "Login successful!",
+                "message": f"Login successful! {message_suffix}",
                 "redirect": redirect_page,
                 "user_type": user_type,
                 "firstname": row['firstname']
@@ -245,3 +264,11 @@ def logout():
         "success": True, 
         "message": "You have been logged out."
     })
+
+# ==============================================================================
+# LOGIN PAGE ROUTE (GET)
+# ==============================================================================
+@login_bp.route('/login', methods=['GET'])
+def login_page():
+    """Serve the login page"""
+    return render_template('login.html')  # You'll need to create this
