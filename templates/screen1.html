@@ -2,445 +2,188 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - MotherCare</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>MotherCare - Pre-eclampsia Guardian</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        /* Page Background */
         body {
-            background: linear-gradient(135deg, #fff5e8 0%, #ffe8d4 100%);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            min-height: 100vh;
+            background-color: white;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            min-height: 100vh;
+            padding: 16px;
         }
 
-        .login-container {
-            max-width: 420px;
-            width: 100%;
-            background: white;
+        /* The Phone Container */
+        .container {
+            padding-top: 30px;
+            width: 360px;
+            min-height: 640px;
+            margin: 0 auto;
             border-radius: 24px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
-            padding: 40px 32px;
-            animation: fadeInUp 0.5s ease;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 28px;
-        }
-
-        .logo h1 {
-            font-size: 32px;
-            font-weight: 800;
-            color: #e67e22;
-            margin-bottom: 4px;
-        }
-
-        .logo p {
-            color: #b86f2c;
-            font-size: 14px;
-        }
-
-        .welcome-text {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
-        .welcome-text h2 {
-            font-size: 24px;
-            color: #1e3a8a;
-            margin-bottom: 8px;
-        }
-
-        .welcome-text p {
-            color: #6c757d;
-            font-size: 14px;
-        }
-
-        .login-tabs {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 24px;
-            background: #f1f5f9;
-            border-radius: 12px;
-            padding: 4px;
-        }
-
-        .login-tab {
-            flex: 1;
-            padding: 10px;
-            text-align: center;
-            border: none;
-            background: transparent;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            color: #64748b;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .login-tab.active {
-            background: white;
-            color: #e67e22;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .login-tab:hover:not(.active) {
-            color: #334155;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 14px;
-            font-weight: 600;
-            color: #334155;
-            margin-bottom: 6px;
-        }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-        .country-code {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #64748b;
-            font-weight: 600;
-            font-size: 14px;
-            pointer-events: none;
-        }
-
-        input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 14px;
-            transition: all 0.3s ease;
-            background: #fafafa;
-        }
-
-        .input-phone {
-            padding-left: 50px;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #e67e22;
-            box-shadow: 0 0 0 3px rgba(230,126,34,0.1);
-            background: white;
-        }
-
-        .forgot-row {
-            text-align: right;
-            margin-bottom: 24px;
-        }
-
-        .forgot-link {
-            color: #e67e22;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .forgot-link:hover {
-            text-decoration: underline;
-        }
-
-        .btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 12px;
-            text-align: center;
-            text-decoration: none;
-            display: block;
+            background-image: url('containerbackground.JPG');
+            background-size: cover;
+            background-position: center;
+            border: 3px solid #f5bd9a; /* Orange border to match requested theme */
+            overflow: hidden;
             box-sizing: border-box;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
         }
 
+        /* Logo Animation (Blink) */
+        .logo {
+            display: block;
+            margin: 10px auto;
+            width: 200px;
+            height: auto;
+            animation: blink 2s linear infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        /* Header Animation (Alternate Slide) */
+        .header {
+            color: #e67e22; /* Orange tint */
+            padding: 10px 16px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            animation: alternateSlide 3s ease-in-out infinite alternate;
+        }
+
+        @keyframes alternateSlide {
+            from { transform: translateX(-6px); }
+            to { transform: translateX(6px); }
+        }
+
+        /* Mother Row (Side-by-Side) - NO SPACE BELOW */
+        .mother-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 16px;
+            margin-bottom: 0; /* NO margin at bottom */
+            padding: 0 16px;
+        }
+
+        .mother {
+            width: 180px;
+            height: auto;
+            border-radius: 12px;
+            display: block;
+        }
+
+        .mother-text {
+            font-size: 11px; /* Smaller text */
+            font-weight: bold;
+            color: #d35400; /* Dark orange */
+            line-height: 1.3;
+            text-align: left;
+            /* Force exactly 2 lines */
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Button Section - NO top margin/padding, directly attached to image row */
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 0 20px 20px 20px; /* NO top padding - buttons touch image row */
+            margin-top: 0; /* NO margin at top - directly attached */
+        }
+
+        .btn-login, .btn-signup {
+            width: 100%;
+            padding: 12px 0;
+            border-radius: 25px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            border: none;
+        }
+
+        /* LOGIN: White background with orange border (unchanged) */
         .btn-login {
-            background: linear-gradient(135deg, #e67e22, #f39c12);
+            background-color: white;
+            color: #ff8c42;
+            border: 2px solid #ff8c42;
+        }
+
+        .btn-login:hover {
+            background-color: #e67e22;
             color: white;
-            box-shadow: 0 4px 12px rgba(230,126,34,0.3);
         }
 
-        .btn-login:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(230,126,34,0.4);
-        }
-
-        .btn-login:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-        }
-
+        /* SIGNUP: Solid orange background (CHANGED) */
         .btn-signup {
-            background: white;
-            color: #e67e22;
-            border: 2px solid #e67e22;
+            background-color: #ff8c42; /* Solid orange */
+            color: white;
+            border: none;
         }
 
         .btn-signup:hover {
-            background: #fff5e8;
+            background-color: #e67e22; /* Darker orange on hover */
         }
 
-        .btn-back {
-            background: #f1f5f9;
-            color: #64748b;
+        /* Small press effect */
+        .btn-login:active, .btn-signup:active {
+            transform: scale(0.97);
         }
 
-        .btn-back:hover {
-            background: #e2e8f0;
-        }
-
-        .divider {
-            text-align: center;
-            margin: 20px 0;
-            position: relative;
-        }
-
-        .divider::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: #e2e8f0;
-        }
-
-        .divider span {
-            background: white;
-            padding: 0 12px;
-            position: relative;
-            z-index: 1;
-            color: #94a3b8;
-            font-size: 12px;
-        }
-
-        .message {
-            text-align: center;
-            padding: 12px;
-            border-radius: 10px;
-            margin-top: 12px;
-            font-size: 14px;
-            display: none;
-            animation: slideDown 0.3s ease;
-        }
-
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .message.error {
-            background: #fee2e2;
-            color: #dc2626;
-            display: block;
-            border: 1px solid #fecaca;
-        }
-
-        .message.success {
-            background: #dcfce7;
-            color: #16a34a;
-            display: block;
-            border: 1px solid #bbf7d0;
-        }
-
-        .spinner {
-            display: none;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255,255,255,0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 0.8s ease infinite;
+        .notice {
             margin: 0 auto;
-        }
-
-        .btn-login.loading .spinner { display: inline-block; }
-        .btn-login.loading .btn-text { display: none; }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .phone-group { display: none; }
-        .phone-group.active { display: block; }
-        .email-group { display: block; }
-        .email-group.hidden { display: none; }
-
-        @media (max-width: 480px) {
-            .login-container { padding: 28px 20px; }
-            .logo h1 { font-size: 28px; }
-            .welcome-text h2 { font-size: 22px; }
+            padding: 16px 20px 20px 20px;
+            text-align: center;
+            font-size: 11px;
+            color: #1e3a8a;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
+    <div class="container">
+        <img src="logo.png" class="logo" alt="MotherCare Logo" onerror="this.src='https://placehold.co/140x60/ff8c42/white?text=MotherCare'">
+        <div class="header">Pre-eclampsia Guardian</div>
 
-<div class="login-container">
-    <div class="logo">
-        <h1>MotherCare</h1>
-        <p>Pre-eclampsia Guardian Portal</p>
-    </div>
-
-    <div class="welcome-text">
-        <h2>Welcome Back</h2>
-        <p>Sign in to monitor your health metric trends</p>
-    </div>
-
-    <div class="login-tabs">
-        <button type="button" class="login-tab active" id="tabEmail" onclick="switchTab('email')">Email Address</button>
-        <button type="button" class="login-tab" id="tabPhone" onclick="switchTab('phone')">Phone Number</button>
-    </div>
-
-    <form id="loginForm" onsubmit="executeLogin(event)">
-        <div class="form-group" id="inputGroup">
-            <label for="loginInput" id="inputLabel">Email Address</label>
-            <div class="input-wrapper" id="inputWrapper">
-                <span class="country-code" id="countryCode" style="display: none;">+256</span>
-                <input type="text" id="loginInput" placeholder="name@domain.com">
+        <div class="mother-row">
+            <img src="woman.png" class="mother" alt="Pregnant Woman" onerror="this.src='https://placehold.co/180x200/ff8c42/white?text=Pregnancy'">
+            <div class="mother-text">
+                Monitor your well-being during pregnancy.
             </div>
         </div>
 
-        <div class="form-group">
-            <label for="passwordInput">Security Password</label>
-            <input type="password" id="passwordInput" placeholder="••••••••" required>
+        <!-- NO SPACE between mother-row and login-container -->
+        <div class="login-container">
+            <button class="btn-login" onclick="location.href='screen2.html'"><b>LOGIN</b></button>
+            <button class="btn-signup" onclick="location.href='screen3.html'"><b>SIGN UP</b></button>
         </div>
 
-        <div class="forgot-row">
-            <a href="/static/forgot_password.html" class="forgot-link">Forgot Password?</a>
+        <div class="notice">
+            Predicting Preeclampsia Risk Using AI
         </div>
+    </div>
 
-        <button type="submit" class="btn btn-login" id="submitBtn">
-            <span class="btn-text">Sign In</span>
-            <div class="spinner"></div>
-        </button>
-
-        <div id="responseMessage" class="message"></div>
-    </form>
-
-    <div class="divider"><span>OR</span></div>
-
-    <a href="/static/screen3.html" class="btn btn-signup">Create New Account</a>
-    <a href="/static/screen1.html" class="btn btn-back">← Back Home</a>
-</div>
-
-<script>
-    let currentAuthType = 'email';
-
-    function switchTab(mode) {
-        currentAuthType = mode;
-        const tabEmail = document.getElementById('tabEmail');
-        const tabPhone = document.getElementById('tabPhone');
-        const inputLabel = document.getElementById('inputLabel');
-        const loginInput = document.getElementById('loginInput');
-        const countryCode = document.getElementById('countryCode');
-
-        if (mode === 'email') {
-            tabEmail.classList.add('active');
-            tabPhone.classList.remove('active');
-            inputLabel.textContent = 'Email Address';
-            loginInput.placeholder = 'name@domain.com';
-            loginInput.type = 'email';
-            countryCode.style.display = 'none';
-            loginInput.classList.remove('input-phone');
-        } else {
-            tabPhone.classList.add('active');
-            tabEmail.classList.remove('active');
-            inputLabel.textContent = 'Phone Number';
-            loginInput.placeholder = '712345678';
-            loginInput.type = 'tel';
-            countryCode.style.display = 'block';
-            loginInput.classList.add('input-phone');
-        }
-    }
-
-    function executeLogin(event) {
-        event.preventDefault();
-
-        const loginInput = document.getElementById('loginInput').value.trim();
-        const password = document.getElementById('passwordInput').value.trim();
-        const messageDiv = document.getElementById('responseMessage');
-        const submitBtn = document.getElementById('submitBtn');
-
-        messageDiv.className = 'message';
-        messageDiv.style.display = 'none';
-
-        if (!loginInput || !password) {
-            showMessage('Please fill in all fields.', 'error');
-            return;
-        }
-
-        const formData = new FormData();
-        formData.append('login_input', loginInput);
-        formData.append('password', password);
-
-        submitBtn.classList.add('loading');
-        submitBtn.disabled = true;
-
-        fetch('/login', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            submitBtn.classList.remove('loading');
-            submitBtn.disabled = false;
-
-            if (data.success) {
-                showMessage(data.message || 'Login successful! Redirecting...', 'success');
-                setTimeout(() => {
-                    window.location.href = data.redirect || '/static/dashboard.html';
-                }, 1000);
-            } else {
-                showMessage(data.message || 'Login failed. Please try again.', 'error');
-            }
-        })
-        .catch(error => {
-            submitBtn.classList.remove('loading');
-            submitBtn.disabled = false;
-            showMessage('Network error. Please check your connection.', 'error');
-            console.error('Login error:', error);
-        });
-    }
-
-    function showMessage(text, type) {
-        const messageDiv = document.getElementById('responseMessage');
-        messageDiv.textContent = text;
-        messageDiv.className = 'message ' + type;
-        messageDiv.style.display = 'block';
-    }
-</script>
-
+    <script>
+        // The buttons work directly with onclick events
+        console.log("Page loaded - Login goes to screen2.html, Signup goes to screen3.html");
+    </script>
 </body>
 </html>
