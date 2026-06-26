@@ -36,7 +36,7 @@ app.secret_key = os.environ.get(
     "mothercare-production-secure-key-9988"
 )
 
-# 🔥 SESSION FIX (THIS IS WHAT YOU WERE MISSING)
+# 🔥 SESSION FIX FOR SECURE DEPLOYMENTS
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = True
 app.config["SESSION_COOKIE_HTTPONLY"] = True
@@ -80,6 +80,7 @@ def test_db():
         cursor = conn.cursor()
         cursor.execute("SELECT DATABASE()")
         db = cursor.fetchone()
+        cursor.close()
         conn.close()
         return f"DB OK: {db}"
     except Exception as e:
