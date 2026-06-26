@@ -1,42 +1,31 @@
-from flask import Blueprint, render_template, session, redirect, url_for
+import traceback
+import pymysql
+from functools import wraps
+from flask import Blueprint, render_template, session, redirect, url_for, flash
+from login import get_db_connection
 
-doctor_bp = Blueprint('doctor_bp', __name__)
+doctor_bp = Blueprint('doctor_bp', __name__, url_prefix='/doctor')
 
-@doctor_bp.route('/doctor/dashboard')
-def doctor_dashboard():
-    if "user_id" not in session or session.get("user_type") != "doctor":
-        return redirect(url_for("login_bp.login_page"))
-    return render_template("doctor_dashboard.html")
-
-
-
+# ==============================================================================
+# DOCTOR AUTHENTICATION DECORATOR
+# ==============================================================================
 def doctor_required(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
         if 'user_id' not in session:
+            flash('Please log in first.', 'error')
             return redirect(url_for('login_bp.login_page'))
 
-        conn = None
-        try:
-            conn = get_db_connection()
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT user_type FROM users WHERE id=%s", (session['user_id'],))
-                user = cursor.fetchone()
-
-            if not user or user.get('user_type') != 'doctor':
-                return redirect(url_for('login_bp.login_page'))
-
-        except Exception as e:
-            print(e)
+        if session.get("user_type") != "doctor":
+            flash('Access denied. Doctor privileges required.', 'error')
             return redirect(url_for('login_bp.login_page'))
-        finally:
-            if conn:
-                conn.close()
 
         return f(*args, **kwargs)
     return wrapper
 
-
+# ==============================================================================
+# DOCTOR ROUTES
+# ==============================================================================
 @doctor_bp.route('/dashboard')
 @doctor_required
 def doctor_dashboard():
@@ -53,7 +42,7 @@ def doctor_dashboard():
             doctor = cursor.fetchone()
 
             if not doctor:
-                return "Doctor profile missing"
+                return "<h1>Doctor profile configuration missing</h1><p>Please complete your profile setup.</p>"
 
             cursor.execute("""
                 SELECT DISTINCT u.id, u.firstname, u.lastname, u.email
@@ -78,7 +67,7 @@ def doctor_dashboard():
 
     except Exception as e:
         print(traceback.format_exc())
-        return f"Doctor error: {str(e)}"
+        return f"<h1>Doctor Dashboard Error</h1><p>{str(e)}</p>", 500
     finally:
         if conn:
             conn.close()
