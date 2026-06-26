@@ -1,9 +1,13 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
-from functools import wraps
-from login import get_db_connection
-import mysql.connector
-from datetime import datetime
-import traceback  # Add this for detailed error logging
+from flask import Blueprint, render_template, session, redirect, url_for
+
+admin_bp = Blueprint('admin_bp', __name__)
+
+@admin_bp.route('/admin/dashboard')
+def admin_dashboard():
+    if "user_id" not in session or session.get("user_type") != "admin":
+        return redirect(url_for("login_bp.login_page"))
+    return render_template("admin_dashboard.html")
+
 
 # ==============================================================================
 # CREATE BLUEPRINT FIRST - BEFORE ANY OTHER OPERATIONS
