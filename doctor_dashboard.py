@@ -1,9 +1,13 @@
-from flask import Blueprint, render_template, session, redirect, url_for, flash
-from functools import wraps
-from login import get_db_connection
-import traceback
+from flask import Blueprint, render_template, session, redirect, url_for
 
-doctor_bp = Blueprint('doctor_bp', __name__, url_prefix='/doctor')
+doctor_bp = Blueprint('doctor_bp', __name__)
+
+@doctor_bp.route('/doctor/dashboard')
+def doctor_dashboard():
+    if "user_id" not in session or session.get("user_type") != "doctor":
+        return redirect(url_for("login_bp.login_page"))
+    return render_template("doctor_dashboard.html")
+
 
 
 def doctor_required(f):
