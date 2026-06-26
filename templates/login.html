@@ -2,38 +2,43 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - MotherCare</title>
     <style>
-        .flash-error { color: white; background-color: #ff4d4d; padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+        .flash-messages { width: 100%; margin-bottom: 15px; }
+        .flash-error { color: white; background-color: #ff4d4d; padding: 10px; margin-bottom: 5px; border-radius: 4px; font-family: sans-serif; font-size: 14px; }
+        .flash-success { color: white; background-color: #2ecc71; padding: 10px; margin-bottom: 5px; border-radius: 4px; font-family: sans-serif; font-size: 14px; }
     </style>
 </head>
-<body>
+<body style="font-family: sans-serif; background-color: #f9f9f9; margin: 0; padding: 0;">
 
-    <div style="max-width: 400px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
-        <h2>MotherCare Login</h2>
+    <div style="max-width: 400px; margin: 80px auto; padding: 30px; border: 1px solid #e0e0e0; border-radius: 8px; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <h2 style="margin-top: 0; color: #333; margin-bottom: 20px;">MotherCare Login</h2>
 
         <!-- Flash error tracking -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
-                {% for category, message in messages %}
-                    <div class="flash-{{ category }}">{{ message }}</div>
-                {% endfor %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
             {% endif %}
         {% endwith %}
 
         <!-- Direct browser native submit mechanism -->
         <form action="{{ url_for('login_bp.login') }}" method="POST">
-            <div style="margin-bottom: 15px;">
-                <label for="login_input">Email or Phone Number:</label><br>
-                <input type="text" id="login_input" name="login_input" required style="width: 100%; padding: 8px;">
+            <div style="margin-bottom: 20px;">
+                <label for="login_input" style="font-weight: bold; color: #555; display: block; margin-bottom: 5px;">Email or Phone Number:</label>
+                <input type="text" id="login_input" name="login_input" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
             </div>
 
-            <div style="margin-bottom: 15px;">
-                <label for="password">Password:</label><br>
-                <input type="password" id="password" name="password" required style="width: 100%; padding: 8px;">
+            <div style="margin-bottom: 25px;">
+                <label for="password" style="font-weight: bold; color: #555; display: block; margin-bottom: 5px;">Password:</label>
+                <input type="password" id="password" name="password" required style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box;">
             </div>
 
-            <button type="submit" style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; cursor: pointer;">
+            <button type="submit" style="width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 16px;">
                 Login
             </button>
         </form>
