@@ -1,8 +1,13 @@
-from flask import Blueprint, render_template, session, redirect, url_for, flash
-from functools import wraps
-from login import get_db_connection
+from flask import Blueprint, render_template, session, redirect, url_for
 
-patient_bp = Blueprint('patient_bp', __name__, url_prefix='/patient')
+patient_bp = Blueprint('patient_bp', __name__)
+
+@patient_bp.route('/patient/dashboard')
+def patient_dashboard():
+    if "user_id" not in session or session.get("user_type") != "client":
+        return redirect(url_for("login_bp.login_page"))
+    return render_template("patient_dashboard.html")  # Make sure this template exists in /templates!
+
 
 # ==============================================================================
 # PATIENT AUTH DECORATOR
