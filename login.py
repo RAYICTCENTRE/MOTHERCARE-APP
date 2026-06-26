@@ -1,7 +1,8 @@
 import re
 import pymysql
-from flask import Blueprint, request, jsonify, session, render_template, url_for
+from flask import Blueprint, request, session, render_template, url_for, redirect, flash
 
+# Make sure this matches the name string used in app.py blueprint registration
 login_bp = Blueprint('login_bp', __name__)
 
 # ================= DB =================
@@ -24,11 +25,9 @@ def get_db_connection():
 
 # ================= PASSWORD =================
 def verify_password(stored, plain):
-    if stored == plain:
-        return True
-    return False
+    return stored == plain
 
-# ================= LOGIN =================
+# ================= LOGIN PROCESS =================
 @login_bp.route('/login', methods=['POST'])
 def login():
     conn = get_db_connection()
@@ -36,10 +35,10 @@ def login():
 
     login_input = request.form.get("login_input")
     password = request.form.get("password")
-    country_code = request.form.get("country_code", "+256")
-
+    
     if not login_input or not password:
-        return jsonify({"success": False, "message": "Missing fields"})
+        flash("Missing fields", "error")
+        return redirect(url_for("login_bp.login_page"))
 
     is_email = "@" in login_input
 
@@ -50,15 +49,20 @@ def login():
         cursor.execute("SELECT * FROM users WHERE phone LIKE %s", (f"%{phone[-7:]}",))
 
     user = cursor.fetchone()
+    cursor.close()
+    conn.close()
 
     if not user:
-        return jsonify({"success": False, "message": "User not found"})
+        flash("User not found", "error")
+        return redirect(url_for("login_bp.login_page"))
 
     if user["status"] != "active":
-        return jsonify({"success": False, "message": "Account inactive"})
+        flash("Account inactive", "error")
+        return redirect(url_for("login_bp.login_page"))
 
     if not verify_password(user["password"], password):
-        return jsonify({"success": False, "message": "Wrong password"})
+        flash("Wrong password", "error")
+        return redirect(url_for("login_bp.login_page"))
 
     # ================= SESSION =================
     session.clear()
@@ -68,23 +72,19 @@ def login():
 
     role = user["user_type"]
 
-    # ================= REDIRECT FIX =================
+    # ================= REDIRECT LOGIC =================
+    # Blueprints look for 'blueprint_name.function_name'
     if role == "admin":
-        redirect_url = url_for("admin.admin_dashboard")
+        return redirect(url_for("admin_bp.admin_dashboard"))
 
     elif role == "doctor":
-        redirect_url = url_for("doctor_bp.doctor_dashboard")
+        return redirect(url_for("doctor_bp.doctor_dashboard"))
 
     elif role == "client":
-        redirect_url = url_for("patient_bp.patient_dashboard")
+        return redirect(url_for("patient_bp.patient_dashboard"))
 
     else:
-        redirect_url = url_for("login_bp.login_page")
-
-    return jsonify({
-        "success": True,
-        "redirect": redirect_url
-    })
+        return redirect(url_for("login_bp.login_page"))
 
 # ================= LOGIN PAGE =================
 @login_bp.route('/login', methods=['GET'])
@@ -95,4 +95,4 @@ def login_page():
 @login_bp.route('/logout')
 def logout():
     session.clear()
-    return jsonify({"success": True})
+    return redirect(url_for("login_bp.login_page"))
