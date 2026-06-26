@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - MotherCare</title>
+    <style>
+        .flash-error { color: white; background-color: #ff4d4d; padding: 10px; margin-bottom: 15px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <div style="max-width: 400px; margin: 50px auto; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
+        <h2>MotherCare Login</h2>
+
+        <!-- Flash error tracking -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Direct browser native submit mechanism -->
+        <form action="{{ url_for('login_bp.login') }}" method="POST">
+            <div style="margin-bottom: 15px;">
+                <label for="login_input">Email or Phone Number:</label><br>
+                <input type="text" id="login_input" name="login_input" required style="width: 100%; padding: 8px;">
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <label for="password">Password:</label><br>
+                <input type="password" id="password" name="password" required style="width: 100%; padding: 8px;">
+            </div>
+
+            <button type="submit" style="width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; cursor: pointer;">
+                Login
+            </button>
+        </form>
+    </div>
+
+</body>
+</html>
