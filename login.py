@@ -38,6 +38,8 @@ def login():
     
     if not login_input or not password:
         flash("Missing fields", "error")
+        cursor.close()
+        conn.close()
         return redirect(url_for("login_bp.login_page"))
 
     is_email = "@" in login_input
@@ -73,7 +75,7 @@ def login():
     role = user["user_type"]
 
     # ================= REDIRECT LOGIC =================
-    # Blueprints look for 'blueprint_name.function_name'
+    # Blueprints resolve to 'blueprint_variable_name.function_name'
     if role == "admin":
         return redirect(url_for("admin_bp.admin_dashboard"))
 
@@ -84,6 +86,7 @@ def login():
         return redirect(url_for("patient_bp.patient_dashboard"))
 
     else:
+        flash("Invalid role assignment.", "error")
         return redirect(url_for("login_bp.login_page"))
 
 # ================= LOGIN PAGE =================
