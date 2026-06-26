@@ -1,16 +1,13 @@
-from flask import Blueprint, render_template, session, redirect, url_for
+import traceback
+import pymysql
+from functools import wraps
+from flask import Blueprint, render_template, session, redirect, url_for, flash
+from login import get_db_connection
 
-patient_bp = Blueprint('patient_bp', __name__)
-
-@patient_bp.route('/patient/dashboard')
-def patient_dashboard():
-    if "user_id" not in session or session.get("user_type") != "client":
-        return redirect(url_for("login_bp.login_page"))
-    return render_template("patient_dashboard.html")  # Make sure this template exists in /templates!
-
+patient_bp = Blueprint('patient_bp', __name__, url_prefix='/patient')
 
 # ==============================================================================
-# PATIENT AUTH DECORATOR
+# PATIENT AUTHENTICATION DECORATOR
 # ==============================================================================
 def patient_required(f):
     @wraps(f)
@@ -19,37 +16,22 @@ def patient_required(f):
             flash('Please log in first.', 'error')
             return redirect(url_for('login_bp.login_page'))
 
-        conn = None
-        try:
-            conn = get_db_connection()
-            with conn.cursor() as cursor:
-                cursor.execute("SELECT user_type FROM users WHERE id=%s", (session['user_id'],))
-                user = cursor.fetchone()
-
-                if not user or user[0] != 'client':
-                    flash('Access denied.', 'error')
-                    return redirect(url_for('login_bp.login_page'))
-
-        finally:
-            if conn:
-                conn.close()
+        if session.get("user_type") != "client":
+            flash('Access denied. Patient credentials required.', 'error')
+            return redirect(url_for('login_bp.login_page'))
 
         return f(*args, **kwargs)
-
     return decorated_function
 
-
 # ==============================================================================
-# PATIENT DASHBOARD (FIXED)
+# PATIENT ROUTES
 # ==============================================================================
 @patient_bp.route('/dashboard')
 @patient_required
 def patient_dashboard():
     conn = None
-
     try:
         conn = get_db_connection()
-
         with conn.cursor() as cursor:
 
             # ================= PROFILE =================
@@ -58,10 +40,7 @@ def patient_dashboard():
                 FROM user_profiles
                 WHERE user_id=%s
             """, (session['user_id'],))
-            profile = cursor.fetchone()
-
-            if profile is None:
-                profile = {}
+            profile = cursor.fetchone() or {}
 
             # ================= SYMPTOMS =================
             cursor.execute("""
@@ -71,12 +50,9 @@ def patient_dashboard():
                 ORDER BY created_at DESC
                 LIMIT 20
             """, (session['user_id'],))
-            symptoms = cursor.fetchall()
+            symptoms = cursor.fetchall() or []
 
-            if symptoms is None:
-                symptoms = []
-
-            # ================= FIXED: PRE-ECLAMPSIA DATA =================
+            # ================= PRE-ECLAMPSIA DATA =================
             cursor.execute("""
                 SELECT *
                 FROM pre_eclampsia_assesment
@@ -84,12 +60,8 @@ def patient_dashboard():
                 ORDER BY created_at DESC
                 LIMIT 20
             """, (session['user_id'],))
-            assessments = cursor.fetchall()
+            assessments = cursor.fetchall() or []
 
-            if assessments is None:
-                assessments = []
-
-            # ================= RENDER =================
             try:
                 return render_template(
                     'patient_dashboard.html',
@@ -98,31 +70,19 @@ def patient_dashboard():
                     assessments=assessments,
                     user=session
                 )
-
             except Exception as template_error:
                 return f"""
-                <h1>Patient Dashboard</h1>
+                <h1>Patient Dashboard (HTML Fallback)</h1>
                 <p><b>Template Error:</b> {template_error}</p>
-
-                <h3>Profile</h3>
-                <pre>{profile}</pre>
-
-                <h3>Assessments</h3>
-                <pre>{assessments}</pre>
-
-                <h3>Symptoms</h3>
-                <pre>{symptoms}</pre>
-
+                <h3>Profile Data</h3><pre>{profile}</pre>
+                <h3>Assessments Log</h3><pre>{assessments}</pre>
+                <h3>Symptoms Log</h3><pre>{symptoms}</pre>
                 <a href="/logout">Logout</a>
                 """
 
     except Exception as e:
-        return f"""
-        <h1>Patient Dashboard Error</h1>
-        <p>{str(e)}</p>
-        <a href="/logout">Logout</a>
-        """, 500
-
+        print(traceback.format_exc())
+        return f"<h1>Patient Dashboard Error</h1><p>{str(e)}</p>", 500
     finally:
         if conn:
             conn.close()
