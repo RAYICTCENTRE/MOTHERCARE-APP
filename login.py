@@ -1,8 +1,8 @@
 # login.py
-import traceback
-import pymysql
 import os
 import re
+import traceback
+import pymysql
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash, jsonify
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime
@@ -30,119 +30,112 @@ def get_db_connection():
         raise
 
 # ==============================================================================
-# LOGIN PAGE ROUTE
+# LOGIN ROUTES
 # ==============================================================================
 @login_bp.route('/login', methods=['GET', 'POST'])
 def login_page():
-    """Handle login page display and authentication"""
+    """Handle login - screen2.html"""
     if request.method == 'GET':
-        # If already logged in, redirect to appropriate dashboard
+        # If user is already logged in, redirect to their dashboard
         if 'user_id' in session:
             user_type = session.get('user_type')
             if user_type == 'admin':
-                return redirect(url_for('admin_bp.admin_dashboard'))
+                return redirect('/admin/dashboard')
             elif user_type == 'doctor':
-                return redirect(url_for('doctor_bp.doctor_dashboard'))
+                return redirect('/doctor/dashboard')
             elif user_type == 'client':
-                return redirect(url_for('patient_bp.patient_dashboard'))
+                return redirect('/patient/dashboard')
         
-        # Render login page
-        try:
-            return render_template('screen2.html')
-        except:
-            return redirect(url_for('index'))
+        # Render the login page (screen2.html)
+        return render_template('screen2.html')
 
-    # POST request - Process login
+    # ========== POST REQUEST - PROCESS LOGIN ==========
     conn = None
     try:
-        # Get form data
         login_input = request.form.get('login_input', '').strip()
         password = request.form.get('password', '').strip()
         country_code = request.form.get('country_code', '+256')
 
-        # Validate input
-        if not login_input or not password:
-            return jsonify({
-                'success': False,
-                'message': 'Please provide both login credentials and password.'
-            }), 400
+        # Validate inputs
+        if not login_input:
+            return jsonify({'success': False, 'message': 'Please enter your phone number or email.'}), 400
+        if not password:
+            return jsonify({'success': False, 'message': 'Please enter your password.'}), 400
 
         # Determine if input is email or phone
-        is_email = '@' in login_input and '.' in login_input.split('@')[1] if '@' in login_input else False
+        is_email = '@' in login_input and '.' in login_input
         
         conn = get_db_connection()
         with conn.cursor() as cursor:
             
             if is_email:
-                # Login with email
+                # LOGIN WITH EMAIL
                 cursor.execute("""
-                    SELECT id, firstname, lastname, email, password, user_type, status
-                    FROM users 
-                    WHERE email = %s
+                    SELECT id, firstname, lastname, email, phone, password, user_type, status 
+                    FROM users WHERE email = %s
                 """, (login_input,))
             else:
-                # Login with phone (clean the phone number)
-                phone_number = re.sub(r'\D', '', login_input)
-                full_phone = f"{country_code}{phone_number}" if not phone_number.startswith('+') else phone_number
+                # LOGIN WITH PHONE
+                # Clean phone number
+                phone_digits = re.sub(r'\D', '', login_input)
                 
+                # Try matching with or without country code
                 cursor.execute("""
-                    SELECT id, firstname, lastname, email, password, user_type, status
-                    FROM users 
-                    WHERE phone = %s OR phone = %s
-                """, (phone_number, full_phone))
+                    SELECT id, firstname, lastname, email, phone, password, user_type, status 
+                    FROM users WHERE phone = %s OR phone = %s
+                """, (phone_digits, country_code + phone_digits))
             
             user = cursor.fetchone()
 
-            # Verify user exists and password is correct
+            # Check if user exists
             if not user:
                 return jsonify({
-                    'success': False,
-                    'message': 'Invalid credentials. Please check your login details.'
+                    'success': False, 
+                    'message': 'No account found. Please check your credentials or sign up.'
                 }), 401
 
-            # Check password
+            # Verify password
             if not check_password_hash(user['password'], password):
                 return jsonify({
-                    'success': False,
-                    'message': 'Invalid credentials. Please check your login details.'
+                    'success': False, 
+                    'message': 'Incorrect password. Please try again.'
                 }), 401
 
             # Check account status
-            if user.get('status') == 'suspended':
+            if user['status'] == 'suspended':
                 return jsonify({
-                    'success': False,
-                    'message': 'Your account has been suspended. Please contact support.'
+                    'success': False, 
+                    'message': 'Your account has been suspended. Contact support.'
                 }), 403
             
-            if user.get('status') == 'pending' and user.get('user_type') == 'doctor':
+            if user['status'] == 'pending' and user['user_type'] == 'doctor':
                 return jsonify({
-                    'success': False,
-                    'message': 'Your doctor account is pending approval. Please wait for admin verification.'
+                    'success': False, 
+                    'message': 'Your doctor account is pending approval. Please wait.'
                 }), 403
 
-            # Set session variables
+            # === LOGIN SUCCESSFUL ===
+            # Set session
             session['user_id'] = user['id']
             session['firstname'] = user['firstname']
             session['lastname'] = user.get('lastname', '')
             session['email'] = user['email']
+            session['phone'] = user.get('phone', '')
             session['user_type'] = user['user_type']
             session['logged_in'] = True
-            session.permanent = True
 
-            # Update last login timestamp
-            cursor.execute("""
-                UPDATE users SET last_login = %s WHERE id = %s
-            """, (datetime.now(), user['id']))
+            # Update last login
+            cursor.execute("UPDATE users SET last_login = %s WHERE id = %s", 
+                         (datetime.now(), user['id']))
             conn.commit()
 
-            # Determine redirect URL based on user type
-            redirect_map = {
+            # Determine redirect based on user type
+            redirect_urls = {
                 'admin': '/admin/dashboard',
                 'doctor': '/doctor/dashboard',
                 'client': '/patient/dashboard'
             }
-            
-            redirect_url = redirect_map.get(user['user_type'], '/')
+            redirect_url = redirect_urls.get(user['user_type'], '/')
 
             return jsonify({
                 'success': True,
@@ -154,8 +147,8 @@ def login_page():
     except Exception as e:
         print(f"Login error: {traceback.format_exc()}")
         return jsonify({
-            'success': False,
-            'message': 'An error occurred during login. Please try again.'
+            'success': False, 
+            'message': 'Login failed. Please try again.'
         }), 500
     finally:
         if conn:
@@ -166,10 +159,9 @@ def login_page():
 # ==============================================================================
 @login_bp.route('/signup', methods=['POST'])
 def signup():
-    """Handle user registration"""
+    """Handle user registration from screen3.html"""
     conn = None
     try:
-        # Get form data
         firstname = request.form.get('firstname', '').strip()
         lastname = request.form.get('lastname', '').strip()
         email = request.form.get('email', '').strip()
@@ -178,25 +170,23 @@ def signup():
         confirm_password = request.form.get('confirm_password', '').strip()
         user_type = request.form.get('user_type', 'client')
 
-        # Validate required fields
+        # Validation
         if not all([firstname, email, phone, password]):
             return jsonify({
                 'success': False,
                 'message': 'Please fill in all required fields.'
             }), 400
 
-        # Validate email
         if not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
             return jsonify({
                 'success': False,
                 'message': 'Please enter a valid email address.'
             }), 400
 
-        # Validate password
         if len(password) < 6:
             return jsonify({
                 'success': False,
-                'message': 'Password must be at least 6 characters long.'
+                'message': 'Password must be at least 6 characters.'
             }), 400
 
         if password != confirm_password:
@@ -205,7 +195,7 @@ def signup():
                 'message': 'Passwords do not match.'
             }), 400
 
-        # Validate phone
+        # Clean phone
         phone_clean = re.sub(r'\D', '', phone)
         if len(phone_clean) < 10:
             return jsonify({
@@ -216,7 +206,7 @@ def signup():
         conn = get_db_connection()
         with conn.cursor() as cursor:
             
-            # Check if email already exists
+            # Check existing email
             cursor.execute("SELECT id FROM users WHERE email = %s", (email,))
             if cursor.fetchone():
                 return jsonify({
@@ -224,7 +214,7 @@ def signup():
                     'message': 'An account with this email already exists.'
                 }), 409
 
-            # Check if phone already exists
+            # Check existing phone
             cursor.execute("SELECT id FROM users WHERE phone = %s", (phone_clean,))
             if cursor.fetchone():
                 return jsonify({
@@ -235,10 +225,10 @@ def signup():
             # Hash password
             hashed_password = generate_password_hash(password)
 
-            # Determine account status
+            # Set status based on user type
             status = 'pending' if user_type == 'doctor' else 'active'
 
-            # Insert new user
+            # Insert user
             cursor.execute("""
                 INSERT INTO users (firstname, lastname, email, phone, password, user_type, status, created_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -246,7 +236,7 @@ def signup():
             
             user_id = cursor.lastrowid
             
-            # If doctor, also insert into doctors table
+            # If doctor, add to doctors table
             if user_type == 'doctor':
                 cursor.execute("""
                     INSERT INTO doctors (user_id, full_name, email, status, created_at)
@@ -257,8 +247,8 @@ def signup():
 
             return jsonify({
                 'success': True,
-                'message': 'Account created successfully! You can now login.',
-                'user_id': user_id
+                'message': 'Account created! You can now login.',
+                'redirect': '/login'
             })
 
     except Exception as e:
@@ -267,7 +257,7 @@ def signup():
         print(f"Signup error: {traceback.format_exc()}")
         return jsonify({
             'success': False,
-            'message': 'An error occurred during registration. Please try again.'
+            'message': 'Registration failed. Please try again.'
         }), 500
     finally:
         if conn:
@@ -278,54 +268,6 @@ def signup():
 # ==============================================================================
 @login_bp.route('/logout')
 def logout():
-    """Clear session and logout user"""
+    """Logout user"""
     session.clear()
-    flash('You have been logged out successfully.', 'success')
-    return redirect(url_for('index'))
-
-# ==============================================================================
-# FORGOT PASSWORD ROUTE
-# ==============================================================================
-@login_bp.route('/forgot-password', methods=['POST'])
-def forgot_password():
-    """Handle forgot password request"""
-    conn = None
-    try:
-        email = request.form.get('email', '').strip()
-        
-        if not email:
-            return jsonify({
-                'success': False,
-                'message': 'Please provide your email address.'
-            }), 400
-
-        conn = get_db_connection()
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT id, firstname FROM users WHERE email = %s", (email,))
-            user = cursor.fetchone()
-            
-            if not user:
-                return jsonify({
-                    'success': False,
-                    'message': 'No account found with this email address.'
-                }), 404
-
-            # Here you would typically:
-            # 1. Generate a reset token
-            # 2. Save it to database with expiry
-            # 3. Send email with reset link
-            
-            return jsonify({
-                'success': True,
-                'message': 'Password reset instructions have been sent to your email.'
-            })
-
-    except Exception as e:
-        print(f"Forgot password error: {traceback.format_exc()}")
-        return jsonify({
-            'success': False,
-            'message': 'An error occurred. Please try again.'
-        }), 500
-    finally:
-        if conn:
-            conn.close()
+    return redirect('/')
