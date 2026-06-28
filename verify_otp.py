@@ -1,91 +1,109 @@
-import os
-from flask import Blueprint, session, request, jsonify
-from werkzeug.security import generate_password_hash
-import mysql.connector
+# verify_otp.py
+import traceback
+from flask import Blueprint, request, jsonify, session
+from datetime import datetime
+from login import get_db_connection
 
-verify_otp_blueprint = Blueprint('verify_otp_blueprint', __name__)
-
-def get_db_connection():
-    return mysql.connector.connect(
-        host=os.environ.get('DB_HOST', 'localhost'),
-        user=os.environ.get('DB_USER', 'root'),
-        password=os.environ.get('DB_PASSWORD', ''),
-        database=os.environ.get('DB_NAME', 'mothercare'),
-        port=int(os.environ.get('DB_PORT', 3306))
-    )
+verify_otp_blueprint = Blueprint('verify_otp', __name__)
 
 @verify_otp_blueprint.route('/verify-otp', methods=['POST'])
 def verify_otp():
-    # 1. Extract Data Safely (Handles both Form-data and JSON payloads)
-    if request.is_json:
-        data = request.get_json() or {}
-    else:
-        data = request.form
-
-    identifier = str(data.get('identifier', '')).strip()
-    otp = str(data.get('otp', '')).strip()
-    new_password = str(data.get('new_password', '')).strip()
-
-    # 2. Input Validation Checks
-    if not identifier or not otp or not new_password:
-        return jsonify({"success": False, "message": "All fields are required"}), 400
-
-    if len(new_password) < 6:
-        return jsonify({"success": False, "message": "Password must be at least 6 characters"}), 400
-
+    """Verify OTP code"""
+    conn = None
     try:
+        otp_code = request.form.get('otp', '').strip()
+        phone = request.form.get('phone', session.get('otp_phone', ''))
+        email = request.form.get('email', session.get('otp_email', ''))
+
+        if not otp_code:
+            return jsonify({
+                'success': False,
+                'message': 'Please enter the OTP code.'
+            }), 400
+
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
+        with conn.cursor() as cursor:
+            
+            # Check OTP in database
+            cursor.execute("""
+                SELECT otp_code, expires_at 
+                FROM otp_codes 
+                WHERE (phone = %s OR email = %s) 
+                AND is_used = FALSE
+                ORDER BY created_at DESC 
+                LIMIT 1
+            """, (phone, email))
+            
+            otp_record = cursor.fetchone()
+            
+            if not otp_record:
+                # Check session as fallback
+                session_otp = session.get('otp_code')
+                session_expiry = session.get('otp_expiry')
+                
+                if session_otp and session_otp == otp_code:
+                    if session_expiry and datetime.now().timestamp() < session_expiry:
+                        # Valid OTP from session
+                        session.pop('otp_code', None)
+                        session.pop('otp_phone', None)
+                        session.pop('otp_email', None)
+                        session.pop('otp_expiry', None)
+                        
+                        return jsonify({
+                            'success': True,
+                            'message': 'OTP verified successfully!'
+                        })
+                
+                return jsonify({
+                    'success': False,
+                    'message': 'Invalid or expired OTP. Please request a new one.'
+                }), 400
 
-        # 3. Find user by email or phone
-        user_sql = "SELECT id, firstname, lastname, email, phone FROM users WHERE email = %s OR phone = %s"
-        cursor.execute(user_sql, (identifier, identifier))
-        user = cursor.fetchone()
+            # Check if OTP has expired
+            if otp_record['expires_at'] < datetime.now():
+                return jsonify({
+                    'success': False,
+                    'message': 'OTP has expired. Please request a new one.'
+                }), 400
 
-        if not user:
-            cursor.close()
-            conn.close()
-            return jsonify({"success": False, "message": "User not found"}), 404
+            # Verify OTP
+            if otp_record['otp_code'] != otp_code:
+                return jsonify({
+                    'success': False,
+                    'message': 'Invalid OTP. Please try again.'
+                }), 400
 
-        user_id = user['id']
+            # Mark OTP as used
+            cursor.execute("""
+                UPDATE otp_codes 
+                SET is_used = TRUE, verified_at = %s 
+                WHERE otp_code = %s AND (phone = %s OR email = %s)
+            """, (datetime.now(), otp_code, phone, email))
+            
+            conn.commit()
+            
+            # Clear session OTP
+            session.pop('otp_code', None)
+            session.pop('otp_phone', None)
+            session.pop('otp_email', None)
+            session.pop('otp_expiry', None)
+            
+            # Set phone verified in session
+            session['phone_verified'] = True
+            
+            return jsonify({
+                'success': True,
+                'message': 'Phone number verified successfully!'
+            })
 
-        # 4. Verify OTP validity against expiration time stamps
-        otp_sql = """
-            SELECT * FROM password_resets 
-            WHERE user_id = %s AND otp = %s AND expires_at > NOW() 
-            ORDER BY created_at DESC LIMIT 1
-        """
-        cursor.execute(otp_sql, (user_id, otp))
-        reset_record = cursor.fetchone()
-
-        if not reset_record:
-            cursor.close()
-            conn.close()
-            return jsonify({"success": False, "message": "Invalid or expired OTP"}), 400
-
-        # 5. Securely Hashing the Password (Matches PHP bcrypt/scrypt defaults)
-        hashed_password = generate_password_hash(new_password)
-
-        # 6. Execute password modification update transaction
-        update_sql = "UPDATE users SET password = %s WHERE id = %s"
-        cursor.execute(update_sql, (hashed_password, user_id))
-
-        # 7. Purge spent/used OTP tokens from the tracking table
-        delete_sql = "DELETE FROM password_resets WHERE user_id = %s"
-        cursor.execute(delete_sql, (user_id,))
-        
-        # Finalize the database writes
-        conn.commit()
-
-        # 8. Clear transient reset values from Flask dynamic sessions
-        session.pop('reset_user_id', None)
-        session.pop('reset_otp', None)
-        session.pop('reset_expires', None)
-
-        return jsonify({"success": True, "message": "Password reset successful"})
-
-    except mysql.connector.Error as err:
-        return jsonify({"success": False, "message": f"Database processing failed: {err}"}), 500
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"Verify OTP error: {traceback.format_exc()}")
+        return jsonify({
+            'success': False,
+            'message': 'OTP verification failed. Please try again.'
+        }), 500
     finally:
-        cursor.close()
-        conn.close()
+        if conn:
+            conn.close()
