@@ -1,145 +1,277 @@
-# doctor_dashboard.py
-import traceback
-import pymysql
-from functools import wraps
-from flask import Blueprint, render_template, session, redirect, url_for, flash, jsonify
-from login import get_db_connection
-
-doctor_bp = Blueprint('doctor_bp', __name__, url_prefix='/doctor')
-
-# ==============================================================================
-# DOCTOR AUTHENTICATION DECORATOR
-# ==============================================================================
-def doctor_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            flash('Please log in first.', 'error')
-            return redirect(url_for('login_bp.login_page'))
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard - MotherCare</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f0f4f8;
+            display: flex;
+            min-height: 100vh;
+        }
         
-        if session.get("user_type") != "doctor":
-            flash('Access denied. Doctor privileges required.', 'error')
-            return redirect(url_for('login_bp.login_page'))
-            
-        # Check if doctor is approved
-        conn = get_db_connection()
-        try:
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    SELECT status FROM doctors WHERE user_id = %s
-                """, (session['user_id'],))
-                doctor = cursor.fetchone()
-                
-                if not doctor or doctor['status'] != 'approved':
-                    flash('Your account is pending approval. Please wait for admin verification.', 'warning')
-                    return redirect(url_for('login_bp.login_page'))
-        finally:
-            conn.close()
-            
-        return f(*args, **kwargs)
-    return decorated_function
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #1e3a8a 0%, #1e40af 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            padding: 20px 0;
+        }
+        
+        .sidebar-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .sidebar-header h2 { color: #fbbf24; font-size: 22px; }
+        .sidebar-header p { font-size: 12px; opacity: 0.7; margin-top: 5px; }
+        
+        .sidebar-nav { padding: 20px 0; }
+        
+        .nav-item {
+            padding: 12px 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+            margin: 5px 15px;
+            border-radius: 10px;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background: rgba(255,255,255,0.15);
+        }
+        
+        .nav-item i { width: 20px; }
+        
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            padding: 30px;
+        }
+        
+        .top-bar {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid #1e3a8a;
+        }
+        
+        .stat-card .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+        
+        .section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            text-align: left;
+            padding: 12px;
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        tr:hover { background: #f8f9fa; }
+        
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-pending { background: #fff3cd; color: #856404; }
+        .badge-active { background: #d4edda; color: #155724; }
+        
+        .btn {
+            padding: 8px 15px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            background: #1e3a8a;
+            color: white;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        
+        .btn:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
 
-# ==============================================================================
-# DOCTOR ROUTES
-# ==============================================================================
-@doctor_bp.route('/dashboard')
-@doctor_required
-def doctor_dashboard():
-    """Doctor dashboard showing patients and consultations"""
-    conn = None
-    try:
-        conn = get_db_connection()
-        with conn.cursor(pymysql.cursors.DictCursor) as cursor:
-            
-            # Get doctor profile
-            cursor.execute("""
-                SELECT * FROM doctors WHERE user_id = %s
-            """, (session['user_id'],))
-            doctor = cursor.fetchone()
-            
-            # Get doctor's patients (patients who have consulted this doctor)
-            cursor.execute("""
-                SELECT DISTINCT u.id, u.firstname, u.lastname, u.email, u.phone,
-                       up.age, up.expected_delivery
-                FROM users u
-                LEFT JOIN user_profiles up ON u.id = up.user_id
-                INNER JOIN consultations c ON u.id = c.patient_id
-                WHERE c.doctor_id = %s AND u.user_type = 'client'
-                ORDER BY c.created_at DESC
-                LIMIT 50
-            """, (session['user_id'],))
-            patients = cursor.fetchall()
-            
-            # Get recent consultations
-            cursor.execute("""
-                SELECT c.*, u.firstname as patient_name, u.email as patient_email
-                FROM consultations c
-                JOIN users u ON c.patient_id = u.id
-                WHERE c.doctor_id = %s
-                ORDER BY c.created_at DESC
-                LIMIT 20
-            """, (session['user_id'],))
-            consultations = cursor.fetchall()
-            
-            # Get pending messages
-            cursor.execute("""
-                SELECT m.*, u.firstname as sender_name
-                FROM messages m
-                JOIN users u ON m.sender_id = u.id
-                WHERE m.receiver_id = %s AND m.is_read = FALSE
-                ORDER BY m.created_at DESC
-                LIMIT 10
-            """, (session['user_id'],))
-            messages = cursor.fetchall()
-            
-            # Statistics
-            total_patients = len(patients)
-            total_consultations = len(consultations)
-            unread_messages = len(messages)
-            
-            try:
-                return render_template('doctor_dashboard.html',
-                                     doctor=doctor,
-                                     patients=patients,
-                                     consultations=consultations,
-                                     messages=messages,
-                                     total_patients=total_patients,
-                                     total_consultations=total_consultations,
-                                     unread_messages=unread_messages,
-                                     user=session)
-            except Exception as template_error:
-                # Fallback HTML
-                return f"""
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Doctor Dashboard</title>
-                    <style>
-                        body {{ font-family: sans-serif; padding: 20px; background: #f0f4f8; }}
-                        .card {{ background: white; padding: 20px; margin: 15px 0; border-radius: 10px; }}
-                        h1 {{ color: #1a472a; }}
-                        table {{ width: 100%; border-collapse: collapse; }}
-                        th, td {{ padding: 10px; text-align: left; border-bottom: 1px solid #eee; }}
-                        a {{ color: #e67e22; }}
-                    </style>
-                </head>
-                <body>
-                    <h1>Doctor Dashboard</h1>
-                    <p>Welcome, Dr. {session.get('firstname', 'Doctor')}!</p>
-                    <div class="card">
-                        <h2>Statistics</h2>
-                        <p>Total Patients: {total_patients}</p>
-                        <p>Total Consultations: {total_consultations}</p>
-                        <p>Unread Messages: {unread_messages}</p>
-                    </div>
-                    <p><a href="/logout">Logout</a></p>
-                </body>
-                </html>
-                """
-                
-    except Exception as e:
-        print(f"Doctor dashboard error: {traceback.format_exc()}")
-        return f"<h1>Error</h1><p>{str(e)}</p>", 500
-    finally:
-        if conn:
-            conn.close()
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2>MotherCare</h2>
+            <p>Doctor Portal</p>
+        </div>
+        <div class="sidebar-nav">
+            <a href="/doctor/dashboard" class="nav-item active">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="/doctor/patients" class="nav-item">
+                <i class="fas fa-users"></i> My Patients
+            </a>
+            <a href="/doctor/consultations" class="nav-item">
+                <i class="fas fa-stethoscope"></i> Consultations
+            </a>
+            <a href="/doctor/messages" class="nav-item">
+                <i class="fas fa-envelope"></i> Messages
+                {% if unread_messages > 0 %}
+                    <span style="background: #dc3545; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: auto;">
+                        {{ unread_messages }}
+                    </span>
+                {% endif %}
+            </a>
+            <a href="/doctor/profile" class="nav-item">
+                <i class="fas fa-user-circle"></i> My Profile
+            </a>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar">
+            <h1>Welcome, Dr. {{ user.firstname }}</h1>
+            <a href="/logout" class="btn" style="background: #dc3545;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ total_patients }}</div>
+                <div>Total Patients</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ total_consultations }}</div>
+                <div>Consultations</div>
+            </div>
+            <div class="stat-card" style="border-left-color: #dc3545;">
+                <div class="stat-number">{{ unread_messages }}</div>
+                <div>Unread Messages</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-users"></i> My Patients</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Patient Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Expected Delivery</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if patients %}
+                        {% for patient in patients %}
+                        <tr>
+                            <td><strong>{{ patient.firstname }} {{ patient.lastname }}</strong></td>
+                            <td>{{ patient.email }}</td>
+                            <td>{{ patient.phone if patient.phone else 'N/A' }}</td>
+                            <td>{{ patient.expected_delivery if patient.expected_delivery else 'Not set' }}</td>
+                            <td>
+                                <a href="/doctor/view-patient/{{ patient.id }}" class="btn">View</a>
+                                <a href="/chat-patient?patient_id={{ patient.id }}" class="btn" style="background: #28a745;">Chat</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 30px;">
+                                No patients assigned yet.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2><i class="fas fa-stethoscope"></i> Recent Consultations</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Date</th>
+                        <th>Symptoms</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if consultations %}
+                        {% for consultation in consultations %}
+                        <tr>
+                            <td>{{ consultation.patient_name }}</td>
+                            <td>{{ consultation.created_at.strftime('%Y-%m-%d') if consultation.created_at else 'N/A' }}</td>
+                            <td>{{ consultation.symptoms[:50] if consultation.symptoms else 'N/A' }}...</td>
+                            <td>
+                                <span class="badge badge-{{ consultation.status }}">
+                                    {{ consultation.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="/doctor/consultation/{{ consultation.id }}" class="btn">View</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 30px;">
+                                No consultations yet.
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>
