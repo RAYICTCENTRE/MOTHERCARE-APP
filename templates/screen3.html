@@ -1,318 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Sign Up - MotherCare</title>
-<style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    background: linear-gradient(135deg, #fff5e8 0%, #ffe8d4 100%);
-    font-family: 'Segoe UI', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-}
-
-.signup-container {
-    max-width: 450px;
-    width: 100%;
-    background: white;
-    border-radius: 32px;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
-    padding: 40px 32px;
-    animation: fadeInUp 0.5s ease;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(30px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-.logo {
-    text-align: center;
-    margin-bottom: 28px;
-}
-
-.logo h1 {
-    font-size: 28px;
-    font-weight: 800;
-    background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.logo p {
-    font-size: 13px;
-    color: #b86f2c;
-    margin-top: 4px;
-}
-
-h2 {
-    text-align: center;
-    color: #1e3a8a;
-    font-size: 24px;
-    margin-bottom: 24px;
-}
-
-.form-group {
-    margin-bottom: 16px;
-}
-
-input, select {
-    width: 100%;
-    padding: 12px 14px;
-    border: 2px solid #e2e8f0;
-    border-radius: 14px;
-    font-size: 14px;
-    font-family: inherit;
-    transition: all 0.3s ease;
-    background: #fefcf8;
-}
-
-input:focus, select:focus {
-    outline: none;
-    border-color: #e67e22;
-    box-shadow: 0 0 0 3px rgba(230,126,34,0.1);
-    background: white;
-}
-
-.btn {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 14px;
-    font-size: 16px;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 8px;
-    text-align: center;
-    text-decoration: none;
-    display: block;
-    box-sizing: border-box;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
-    color: white;
-    box-shadow: 0 4px 12px rgba(230,126,34,0.3);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(230,126,34,0.4);
-}
-
-.btn-secondary {
-    background: #f1f5f9;
-    color: #64748b;
-}
-
-.btn-secondary:hover {
-    background: #e2e8f0;
-    transform: translateY(-2px);
-}
-
-.message {
-    text-align: center;
-    padding: 10px;
-    border-radius: 10px;
-    margin-top: 12px;
-    font-size: 13px;
-    display: none;
-}
-
-.message.error {
-    background: #fee2e2;
-    color: #dc2626;
-    display: block;
-}
-
-.message.success {
-    background: #dcfce7;
-    color: #16a34a;
-    display: block;
-}
-
-.divider {
-    text-align: center;
-    margin: 20px 0;
-    position: relative;
-}
-
-.divider::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: #e2e8f0;
-}
-
-.divider span {
-    background: white;
-    padding: 0 12px;
-    position: relative;
-    z-index: 1;
-    color: #94a3b8;
-    font-size: 12px;
-}
-
-@media (max-width: 480px) {
-    .signup-container {
-        padding: 28px 24px;
-    }
-    
-    h2 {
-        font-size: 22px;
-    }
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - MotherCare</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #fff5e8 0%, #ffe8d4 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+        .signup-container {
+            max-width: 450px;
+            width: 100%;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+            padding: 36px 28px 32px;
+            animation: fadeInUp 0.5s ease;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .logo { text-align: center; margin-bottom: 20px; }
+        .logo h1 { font-size: 30px; font-weight: 800; color: #e67e22; }
+        .logo p { color: #b86f2c; font-size: 13px; margin-top: 2px; }
+        .welcome-text { text-align: center; margin-bottom: 24px; }
+        .welcome-text h2 { font-size: 22px; color: #1e3a8a; font-weight: 700; }
+        .welcome-text p { color: #6c757d; font-size: 14px; margin-top: 4px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 5px; }
+        .form-row { display: flex; gap: 12px; }
+        .form-row .form-group { flex: 1; }
+        .input-field {
+            width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 14px;
+            font-size: 15px; transition: all 0.3s ease; background: #fafafa; outline: none;
+        }
+        .input-field:focus { border-color: #e67e22; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); background: white; }
+        .input-field::placeholder { color: #a0aec0; }
+        .phone-wrapper {
+            display: flex; border: 2px solid #e2e8f0; border-radius: 14px;
+            background: #fafafa; transition: all 0.3s ease; overflow: hidden;
+        }
+        .phone-wrapper:focus-within { border-color: #e67e22; box-shadow: 0 0 0 3px rgba(230,126,34,0.1); background: white; }
+        .country-select {
+            padding: 14px 8px 14px 12px; border: none; background: transparent;
+            font-size: 14px; font-weight: 600; color: #334155; cursor: pointer;
+            outline: none; min-width: 82px; border-right: 2px solid #e2e8f0; flex-shrink: 0;
+        }
+        .input-phone {
+            flex: 1; padding: 14px 16px; border: none; background: transparent;
+            font-size: 15px; outline: none;
+        }
+        .user-type-selector {
+            display: flex; gap: 8px; margin-bottom: 20px; background: #f1f5f9;
+            border-radius: 14px; padding: 4px;
+        }
+        .type-option {
+            flex: 1; padding: 11px 8px; text-align: center; border: none;
+            background: transparent; border-radius: 11px; font-size: 14px;
+            font-weight: 600; color: #64748b; cursor: pointer; transition: all 0.3s;
+        }
+        .type-option.active { background: white; color: #e67e22; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+        .btn {
+            width: 100%; padding: 14px; border: none; border-radius: 14px;
+            font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s;
+            text-align: center; display: block; margin-bottom: 12px;
+        }
+        .btn-signup {
+            background: linear-gradient(135deg, #e67e22, #f39c12);
+            color: white; box-shadow: 0 4px 14px rgba(230,126,34,0.35);
+        }
+        .btn-signup:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(230,126,34,0.45); }
+        .btn-signup:disabled { opacity: 0.7; cursor: not-allowed; }
+        .btn-login { background: white; color: #e67e22; border: 2px solid #e67e22; text-decoration: none; }
+        .btn-login:hover { background: #fff5e8; }
+        .btn-back { background: #f1f5f9; color: #64748b; text-decoration: none; }
+        .btn-back:hover { background: #e2e8f0; }
+        .alert-box {
+            padding: 12px 16px; border-radius: 10px; margin-bottom: 15px;
+            font-size: 14px; display: none; text-align: center; font-weight: 500;
+        }
+        .alert-danger { background-color: #fde8e8; color: #9b1c1c; border: 1px solid #f8b4b4; display: block; }
+        .alert-success { background-color: #def7ec; color: #03543f; border: 1px solid #84e1bc; display: block; }
+        .spinner {
+            display: none; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%; border-top-color: #fff; animation: spin 0.8s ease infinite; margin: 0 auto;
+        }
+        .btn-signup.loading .spinner { display: inline-block; }
+        .btn-signup.loading .btn-text { display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .terms { text-align: center; font-size: 12px; color: #6c757d; margin-top: 10px; }
+        .terms a { color: #e67e22; text-decoration: none; }
+    </style>
 </head>
 <body>
 
-<div class="signup-container">
-    <div class="logo">
-        <h1>MotherCare</h1>
-        <p>Pre-eclampsia Guardian</p>
-    </div>
-    
-    <h2>Create Account</h2>
-    
-    <form id="signupForm">
-        <div class="form-group">
-            <input type="text" id="firstname" name="firstname" placeholder="First Name" required>
+    <div class="signup-container">
+        <div class="logo">
+            <h1>MotherCare</h1>
+            <p>Join Our Maternal Health Community</p>
         </div>
-        
-        <div class="form-group">
-            <input type="text" id="lastname" name="lastname" placeholder="Last Name" required>
-        </div>
-        
-        <div class="form-group">
-            <input type="email" id="email" name="email" placeholder="Email Address" required>
-        </div>
-        
-        <div class="form-group">
-            <input type="tel" id="phone" name="phone" placeholder="Phone Number (e.g. 712345678)">
-        </div>
-        
-        <div class="form-group">
-            <select id="user_type" name="user_type" required>
-                <option value="">Select User Type</option>
-                <option value="client">Patient</option>
-                <option value="doctor">Doctor</option>
-            </select>
-        </div>
-        
-        <div class="form-group">
-            <input type="password" id="password" name="password" placeholder="Create Password (min 6 characters)" required>
-        </div>
-        
-        <div class="form-group">
-            <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirm Password" required>
-        </div>
-        
-        <button type="submit" class="btn btn-primary">Sign Up</button>
-    </form>
-    
-    <div class="divider">
-        <span>OR</span>
-    </div>
-    
-    <!-- Updated path link to map to Flask safe static layout location -->
-    <a href="/static/screen2.html" class="btn btn-secondary">Already have an account? Login</a>
-    
-    <div id="message" class="message"></div>
-</div>
 
-<script>
-document.getElementById('signupForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirm_password').value;
-    const messageDiv = document.getElementById('message');
-    
-    messageDiv.style.display = "none";
-    
-    // Validate passwords match
-    if (password !== confirmPassword) {
-        messageDiv.className = "message error";
-        messageDiv.innerText = "❌ Passwords do not match!";
-        return;
-    }
-    
-    // Validate password length
-    if (password.length < 6) {
-        messageDiv.className = "message error";
-        messageDiv.innerText = "❌ Password must be at least 6 characters";
-        return;
-    }
-    
-    // Clean and extract phone parameters to auto-prefix with country code if needed
-    let rawPhone = document.getElementById('phone').value.trim();
-    let cleanPhone = "";
-    if (rawPhone) {
-        // If it starts with 0, drop it; if it doesn't already have +256, prepend it
-        if(rawPhone.startsWith('0')) rawPhone = rawPhone.substring(1);
-        cleanPhone = rawPhone.startsWith('+') ? rawPhone : '+256' + rawPhone;
-    }
-    
-    // Compile JSON structured objects payload directly targeting Flask backends
-    const payload = {
-        firstname: document.getElementById('firstname').value.trim(),
-        lastname: document.getElementById('lastname').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        phone: cleanPhone,
-        user_type: document.getElementById('user_type').value,
-        password: password
-    };
-    
-    try {
-        const response = await fetch('/api/signup', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            messageDiv.className = "message success";
-            messageDiv.innerText = "✅ " + result.message;
-            setTimeout(() => {
-                // Dynamically routes new profiles directly to the login panel
-                window.location.href = "/static/screen2.html";
-            }, 1500);
-        } else {
-            messageDiv.className = "message error";
-            messageDiv.innerText = "❌ " + result.message;
+        <div class="welcome-text">
+            <h2>Create Account</h2>
+            <p>Start monitoring your pregnancy health</p>
+        </div>
+
+        <div class="alert-box" id="alert"></div>
+
+        <form id="signupForm">
+            <!-- User Type Selection -->
+            <div class="form-group">
+                <label>I am a:</label>
+                <div class="user-type-selector">
+                    <button type="button" class="type-option active" data-type="client" onclick="selectUserType('client', this)">
+                        🤰 Patient
+                    </button>
+                    <button type="button" class="type-option" data-type="doctor" onclick="selectUserType('doctor', this)">
+                        👨‍⚕️ Doctor
+                    </button>
+                </div>
+                <input type="hidden" name="user_type" id="user_type" value="client">
+            </div>
+
+            <!-- Name Fields -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>First Name *</label>
+                    <input type="text" class="input-field" name="firstname" id="firstname" placeholder="Sarah" required>
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" class="input-field" name="lastname" id="lastname" placeholder="Nakamya">
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="form-group">
+                <label>Email Address *</label>
+                <input type="email" class="input-field" name="email" id="email" placeholder="sarah@example.com" required>
+            </div>
+
+            <!-- Phone -->
+            <div class="form-group">
+                <label>Phone Number *</label>
+                <div class="phone-wrapper">
+                    <select class="country-select" name="country_code" id="country_code">
+                        <option value="+256" selected>🇺🇬 +256</option>
+                        <option value="+254">🇰🇪 +254</option>
+                        <option value="+255">🇹🇿 +255</option>
+                        <option value="+250">🇷🇼 +250</option>
+                        <option value="+257">🇧🇮 +257</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                    </select>
+                    <input type="tel" class="input-phone" name="phone" id="phone" placeholder="712345678" required>
+                </div>
+            </div>
+
+            <!-- Password -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" class="input-field" name="password" id="password" placeholder="••••••••" required minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password *</label>
+                    <input type="password" class="input-field" name="confirm_password" id="confirm_password" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn btn-signup" id="submitBtn">
+                <span class="btn-text">Create Account</span>
+                <div class="spinner"></div>
+            </button>
+        </form>
+
+        <a href="/static/screen2.html" class="btn btn-login">Already have an account? Sign In</a>
+        <a href="/" class="btn btn-back">← Back to Home</a>
+
+        <p class="terms">
+            By creating an account, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+        </p>
+    </div>
+
+    <script>
+        let selectedUserType = 'client';
+
+        function selectUserType(type, element) {
+            selectedUserType = type;
+            document.getElementById('user_type').value = type;
+            
+            // Update active state
+            document.querySelectorAll('.type-option').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            element.classList.add('active');
         }
-    } catch (error) {
-        messageDiv.className = "message error";
-        messageDiv.innerText = "❌ Network processing break. Please try again.";
-    }
-});
-</script>
 
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const alertBox = document.getElementById('alert');
+            const submitBtn = document.getElementById('submitBtn');
+            const btnText = submitBtn.querySelector('.btn-text');
+            
+            alertBox.style.display = 'none';
+            alertBox.className = 'alert-box';
+
+            // Get form data
+            const formData = new FormData(this);
+            
+            // Validate passwords match
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            
+            if (password !== confirmPassword) {
+                alertBox.className = 'alert-box alert-danger';
+                alertBox.innerText = 'Passwords do not match.';
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            if (password.length < 6) {
+                alertBox.className = 'alert-box alert-danger';
+                alertBox.innerText = 'Password must be at least 6 characters.';
+                alertBox.style.display = 'block';
+                return;
+            }
+
+            // Show loading
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+            btnText.textContent = '';
+
+            try {
+                const response = await fetch('/signup', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+                btnText.textContent = 'Create Account';
+
+                if (result.success) {
+                    alertBox.className = 'alert-box alert-success';
+                    alertBox.innerText = result.message + ' Redirecting to login...';
+                    alertBox.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        window.location.href = result.redirect || '/static/screen2.html';
+                    }, 1500);
+                } else {
+                    alertBox.className = 'alert-box alert-danger';
+                    alertBox.innerText = result.message || 'Signup failed.';
+                    alertBox.style.display = 'block';
+                }
+            } catch (error) {
+                submitBtn.classList.remove('loading');
+                submitBtn.disabled = false;
+                btnText.textContent = 'Create Account';
+                
+                alertBox.className = 'alert-box alert-danger';
+                alertBox.innerText = 'Network error. Please try again.';
+                alertBox.style.display = 'block';
+                console.error('Signup error:', error);
+            }
+        });
+    </script>
 </body>
 </html>
