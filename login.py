@@ -1,101 +1,161 @@
+import os
 import re
 import pymysql
-from flask import Blueprint, request, session, render_template, url_for, redirect, flash
+from flask import Blueprint, request, session, render_template, jsonify, url_for
 
-# Make sure this matches the name string used in app.py blueprint registration
-login_bp = Blueprint('login_bp', __name__)
+login_bp = Blueprint("login_bp", __name__)
 
-# ================= DB =================
-db_host = "reseau.proxy.rlwy.net"
-db_port = 15442
-db_user = "root"
-db_password = "LMaZTqGYVPifqVIdnxJaOZWGXytgIRyC"
-db_name = "mothercare"
+# ================= DATABASE =================
+
+DB_HOST = os.getenv("DB_HOST", "reseau.proxy.rlwy.net")
+DB_PORT = int(os.getenv("DB_PORT", "15442"))
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "LMaZTqGYVPifqVIdnxJaOZWGXytgIRyC")
+DB_NAME = os.getenv("DB_NAME", "mothercare")
+
 
 def get_db_connection():
     return pymysql.connect(
-        host=db_host,
-        port=db_port,
-        user=db_user,
-        password=db_password,
-        database=db_name,
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
         cursorclass=pymysql.cursors.DictCursor,
         autocommit=True
     )
 
+
 # ================= PASSWORD =================
-def verify_password(stored, plain):
-    return stored == plain
 
-# ================= LOGIN PROCESS =================
-@login_bp.route('/login', methods=['POST'])
-def login():
-    conn = get_db_connection()
-    cursor = conn.cursor()
+def verify_password(stored_password, entered_password):
+    return stored_password == entered_password
 
-    login_input = request.form.get("login_input")
-    password = request.form.get("password")
-    
-    if not login_input or not password:
-        flash("Missing fields", "error")
-        cursor.close()
-        conn.close()
-        return redirect(url_for("login_bp.login_page"))
-
-    is_email = "@" in login_input
-
-    if is_email:
-        cursor.execute("SELECT * FROM users WHERE email=%s", (login_input,))
-    else:
-        phone = re.sub(r"\D", "", login_input)
-        cursor.execute("SELECT * FROM users WHERE phone LIKE %s", (f"%{phone[-7:]}",))
-
-    user = cursor.fetchone()
-    cursor.close()
-    conn.close()
-
-    if not user:
-        flash("User not found", "error")
-        return redirect(url_for("login_bp.login_page"))
-
-    if user["status"] != "active":
-        flash("Account inactive", "error")
-        return redirect(url_for("login_bp.login_page"))
-
-    if not verify_password(user["password"], password):
-        flash("Wrong password", "error")
-        return redirect(url_for("login_bp.login_page"))
-
-    # ================= SESSION =================
-    session.clear()
-    session["user_id"] = user["id"]
-    session["firstname"] = user["firstname"]
-    session["user_type"] = user["user_type"]
-
-    role = user["user_type"]
-
-    # ================= REDIRECT LOGIC =================
-    # Blueprints resolve to 'blueprint_variable_name.function_name'
-    if role == "admin":
-        return redirect(url_for("admin_bp.admin_dashboard"))
-
-    elif role == "doctor":
-        return redirect(url_for("doctor_bp.doctor_dashboard"))
-
-    elif role == "client":
-        return redirect(url_for("patient_bp.patient_dashboard"))
-
-    else:
-        flash("Invalid role assignment.", "error")
-        return redirect(url_for("login_bp.login_page"))
 
 # ================= LOGIN PAGE =================
-@login_bp.route('/login', methods=['GET'])
+
+@login_bp.route("/login", methods=["GET"])
 def login_page():
-    return render_template("login.html")
+    return render_template("screen2.html")
+
+
+# ================= LOGIN =================
+
+@login_bp.route("/login", methods=["POST"])
+def login():
+
+    login_input = request.form.get("login_input", "").strip()
+    password = request.form.get("password", "").strip()
+
+    if login_input == "" or password == "":
+        return jsonify({
+            "success": False,
+            "message": "Please fill in all fields."
+        })
+
+    conn = None
+
+    try:
+
+        conn = get_db_connection()
+
+        cursor = conn.cursor()
+
+        if "@" in login_input:
+
+            cursor.execute(
+                "SELECT * FROM users WHERE email=%s",
+                (login_input,)
+            )
+
+        else:
+
+            phone = re.sub(r"\D", "", login_input)
+
+            cursor.execute(
+                "SELECT * FROM users WHERE phone LIKE %s",
+                (f"%{phone[-7:]}",)
+            )
+
+        user = cursor.fetchone()
+
+        cursor.close()
+
+        if not user:
+
+            return jsonify({
+                "success": False,
+                "message": "User not found."
+            })
+
+        if user.get("status") != "active":
+
+            return jsonify({
+                "success": False,
+                "message": "Your account is inactive."
+            })
+
+        if not verify_password(user["password"], password):
+
+            return jsonify({
+                "success": False,
+                "message": "Wrong password."
+            })
+
+        session.clear()
+
+        session["user_id"] = user["id"]
+        session["firstname"] = user["firstname"]
+        session["user_type"] = user["user_type"]
+
+        role = user["user_type"]
+
+        if role == "admin":
+
+            redirect_url = url_for("admin_bp.admin_dashboard")
+
+        elif role == "doctor":
+
+            redirect_url = url_for("doctor_bp.doctor_dashboard")
+
+        elif role == "client":
+
+            redirect_url = url_for("patient_bp.patient_dashboard")
+
+        else:
+
+            return jsonify({
+                "success": False,
+                "message": "Invalid account role."
+            })
+
+        return jsonify({
+            "success": True,
+            "message": "Login successful.",
+            "redirect": redirect_url
+        })
+
+    except Exception as e:
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        })
+
+    finally:
+
+        if conn:
+            conn.close()
+
 
 # ================= LOGOUT =================
-@login_bp.route('/logout')
+
+@login_bp.route("/logout")
 def logout():
+
     session.clear()
-    return redirect(url_for("login_bp.login_page"))
+
+    return jsonify({
+        "success": True,
+        "redirect": "/login"
+    })
